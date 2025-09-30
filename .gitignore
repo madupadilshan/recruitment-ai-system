@@ -1,0 +1,382 @@
+# Recruitment AI System - .gitignore
+
+# ================================
+# Environment Variables & Secrets
+# ================================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+
+# Configuration files with sensitive data
+config/database.js
+config/production.json
+config/development.json
+
+# ================================
+# Node.js (Backend & Frontend)
+# ================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# ================================
+# React Frontend Specific
+# ================================
+# Production build
+frontend/build/
+frontend/dist/
+
+# Static files
+frontend/public/uploads/
+frontend/src/**/*.css.map
+
+# ================================
+# Python AI Service
+# ================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+ai-service/dist/
+ai-service/build/
+ai-service/develop-eggs/
+ai-service/downloads/
+ai-service/eggs/
+ai-service/.eggs/
+ai-service/lib/
+ai-service/lib64/
+ai-service/parts/
+ai-service/sdist/
+ai-service/var/
+ai-service/wheels/
+ai-service/share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+ai-service/venv/
+ai-service/env/
+ai-service/ENV/
+ai-service/env.bak/
+ai-service/venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# AI Models & Cache
+ai-service/models/
+ai-service/cache/
+ai-service/downloads/
+*.pkl
+*.joblib
+*.model
+
+# ================================
+# File Uploads & User Data
+# ================================
+# CV/Resume uploads
+backend/uploads/
+uploads/
+*.pdf
+*.doc
+*.docx
+
+# User profile images
+backend/public/images/users/
+frontend/public/images/users/
+
+# Temporary files
+*.tmp
+*.temp
+
+# ================================
+# Database
+# ================================
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Database dumps
+*.sql
+*.dump
+
+# ================================
+# Logs
+# ================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ================================
+# Docker
+# ================================
+# Docker volumes
+docker-volumes/
+.docker/
+
+# ================================
+# IDE & Editor Files
+# ================================
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Atom
+.atom/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# ================================
+# Operating System Files
+# ================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ================================
+# Deployment & Production
+# ================================
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+ssl/
+
+# Deployment scripts with sensitive data
+deploy-secrets.sh
+production-config.json
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# ================================
+# Testing
+# ================================
+# Test results
+test-results/
+coverage-results/
+
+# ================================
+# Monitoring & Analytics
+# ================================
+# Performance monitoring
+newrelic_agent.log
+
+# Analytics
+analytics.json
+
+# ================================
+# Miscellaneous
+# ================================
+# Temporary directories
+tmp/
+temp/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Cache directories
+.cache/
+cache/
+
+# Runtime configuration
+runtime-config.json
+
+# ================================
+# Package Lock Files (Optional)
+# ================================
+# Uncomment if you don't want to commit lock files
+# package-lock.json
+# yarn.lock
+
+# ================================
+# Local Development Only
+# ================================
+# Local development database
+dev.db
+
+# Local test files
+test-data/
+sample-cvs/
+test-uploads/
