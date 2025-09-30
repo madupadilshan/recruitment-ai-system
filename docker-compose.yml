@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - AI_SERVICE_URL=http://ai-service:8000
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=/api
+    networks:
+      - app-network
+
+  ai-service:
+    build: ./ai-service
+    container_name: ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=production
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
