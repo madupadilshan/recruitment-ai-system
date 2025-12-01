@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, MapPin, Calendar, Building, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
@@ -12,10 +12,7 @@ const AppliedJobs = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/applications/my-applications", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get("/applications/my-applications");
         setApplications(res.data);
       } catch (err) {
         console.error("Error fetching applications:", err);
