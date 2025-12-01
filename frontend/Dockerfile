@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# Override API URL for production build to use relative path (handled by Nginx)
+ENV REACT_APP_API_URL=/api
 RUN npm run build
 
 FROM nginx:alpine
