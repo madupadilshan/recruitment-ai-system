@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 
 const BackToHome = () => {
   const location = useLocation();
-  
+
   // Don't show on dashboard, login, or signup pages
   if (['/', '/signup', '/dashboard'].includes(location.pathname)) {
     return null;
