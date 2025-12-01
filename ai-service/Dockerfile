@@ -6,8 +6,8 @@ WORKDIR /app
 
 # Install system dependencies required for some python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+  build-essential \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container at /app
 COPY requirements.txt .
@@ -26,9 +26,9 @@ COPY . .
 EXPOSE 8000
 
 # Define environment variable
-ENV FLASK_APP app.py
-ENV FLASK_RUN_HOST 0.0.0.0
-ENV FLASK_RUN_PORT 8000
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=8000
 
 # Run app.py when the container launches
 CMD ["flask", "run"]
