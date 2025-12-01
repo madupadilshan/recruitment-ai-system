@@ -6,8 +6,13 @@ const applicationSchema = new mongoose.Schema({
   candidate: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   job: { type: mongoose.Schema.Types.ObjectId, ref: "Job" },
   cvText: String,
+  status: {
+    type: String,
+    enum: ['pending', 'accepted', 'rejected', 'interview'],
+    default: 'pending'
+  },
   // ✅ Changed 'score' to 'analysis' to store the detailed JSON object
-  analysis: { type: mongoose.Schema.Types.Mixed } 
+  analysis: { type: mongoose.Schema.Types.Mixed }
 }, { timestamps: true });
 
 export default mongoose.model("Application", applicationSchema);

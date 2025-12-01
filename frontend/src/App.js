@@ -12,6 +12,7 @@ import Messages from "./pages/Messages"; // ✅ messaging
 import Interviews from "./pages/Interviews"; // ✅ interviews
 import ScheduleInterview from "./pages/ScheduleInterview"; // ✅ scheduling
 import CVAnalysis from "./pages/CVAnalysis"; // ✅ AI CV Analysis
+import AppliedJobs from "./pages/AppliedJobs"; // ✅ Applied Jobs
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
@@ -27,7 +28,7 @@ function App() {
 
   useEffect(() => {
     const socket = io("http://localhost:5000");
-    
+
     socket.on("connect", () => {
       console.log("✅ Connected to Socket.io server!", socket.id);
     });
@@ -100,8 +101,9 @@ function App() {
           <Route path="/post-job" element={<ProtectedRoute role="recruiter"><PostJob /></ProtectedRoute>} />
           <Route path="/applicants/:jobId" element={<ProtectedRoute role="recruiter"><Applicants /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute role="candidate"><Profile /></ProtectedRoute>} />
+          <Route path="/applied-jobs" element={<ProtectedRoute role="candidate"><AppliedJobs /></ProtectedRoute>} />
         </Routes>
-        
+
         {/* Notification Banners */}
         {notifications.map((notification) => (
           <NotificationBanner

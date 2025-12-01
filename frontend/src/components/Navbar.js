@@ -32,21 +32,27 @@ function Navbar() {
             <Link to="/messages" className="hover:text-yellow-300">
               💬 Messages
             </Link>
-            
+
             <Link to="/interviews" className="hover:text-yellow-300">
               📅 Interviews
             </Link>
-            
+
             <Link to="/cv-analysis" className="hover:text-yellow-300">
               🤖 AI CV Analysis
             </Link>
-            
+
+            {user.role === "candidate" && (
+              <Link to="/applied-jobs" className="hover:text-yellow-300">
+                📋 Applied Jobs
+              </Link>
+            )}
+
             {user.role === "recruiter" && (
               <Link to="/post-job" className="hover:text-yellow-300">
                 📝 Post Job
               </Link>
             )}
-            
+
             {/* ✅ Updated Profile Icon Link to point to /account */}
             <Link
               to="/account"
@@ -86,6 +92,7 @@ function Navbar() {
                   <Link to="/cv-analysis" className={`${isActive("/cv-analysis")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>🤖 AI CV Analysis</Link>
                   <Link to="/account" className={`${isActive("/account")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>👤 My Account</Link>
                   {user.role === 'candidate' && <Link to="/profile" className={`${isActive("/profile")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>📄 Professional Profile</Link>}
+                  {user.role === 'candidate' && <Link to="/applied-jobs" className={`${isActive("/applied-jobs")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>📋 Applied Jobs</Link>}
                   {user.role === "recruiter" && <Link to="/post-job" className={`${isActive("/post-job")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>📝 Post Job</Link>}
                   <button onClick={() => { logout(); navigate("/"); setMenuOpen(false); }} className="w-full px-3 py-2 text-left text-white bg-red-500 rounded-lg hover:bg-red-600">Logout</button>
                 </>

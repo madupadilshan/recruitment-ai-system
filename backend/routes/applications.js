@@ -63,14 +63,32 @@ router.get("/count/matches-today", authMiddleware, recruiterOnly, async (req, re
         const jobs = await Job.find({ recruiter: req.user.id }).select('_id');
         const jobIds = jobs.map(job => job._id);
 
-        const count = await Application.countDocuments({ 
+        const count = await Application.countDocuments({
             job: { $in: jobIds },
             createdAt: { $gte: today } // Filter applications created today or later
         });
-        
+
         res.json({ count });
     } catch (err) {
         console.error("❌ Today's matches count fetch error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ✅ NEW: Get all applications for the logged-in candidate
+router.get("/my-applications", authMiddleware, async (req, res) => {
+    try {
+        // Find applications where the candidate is the logged-in user
+        const applications = await Application.find({ candidate: req.user.id })
+            .populate({
+                path: "job",
+                select: "title company location type salary" // Select fields to display
+            })
+            .sort({ createdAt: -1 }); // Sort by newest first
+
+        res.json(applications);
+    } catch (err) {
+        console.error("❌ Fetch my applications error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
