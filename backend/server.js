@@ -21,9 +21,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Atlas Connection  
-const mongoUri = process.env.MONGO_URI || "mongodb+srv://admin:12345@cluster0.jdlrz0c.mongodb.net/recruitment-ai-system?retryWrites=true&w=majority&appName=Cluster0";
+// MongoDB Atlas Connection
+const mongoUri = process.env.MONGO_URI;
 console.log("📋 Connecting to MongoDB:", mongoUri ? "URI loaded" : "URI not found");
+
+if (!mongoUri) {
+  console.error("❌ FATAL ERROR: MONGO_URI is not defined in environment variables.");
+  process.exit(1);
+}
 
 mongoose.connect(mongoUri)
 .then(() => console.log("✅ MongoDB Atlas Connected"))
@@ -58,13 +63,13 @@ const connectedUsers = new Map();
 
 io.on("connection", (socket) => {
   console.log("🔔 Socket.io client connected:", socket.id);
-  
+
   // Store user connection when they authenticate
   socket.on("user_connected", (userId) => {
     connectedUsers.set(userId, socket.id);
     console.log(`👤 User ${userId} connected with socket ${socket.id}`);
   });
-  
+
   socket.on("disconnect", () => {
     // Remove user from connected users map
     for (let [userId, socketId] of connectedUsers.entries()) {
