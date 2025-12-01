@@ -27,7 +27,9 @@ function App() {
   const { user } = useAuth();
 
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    // Use environment variable or default to relative path for production (proxy)
+    const socketUrl = process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5000';
+    const socket = io(socketUrl);
 
     socket.on("connect", () => {
       console.log("✅ Connected to Socket.io server!", socket.id);

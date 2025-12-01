@@ -117,11 +117,11 @@ const AppliedJobs = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 gap-y-2 gap-x-6 mb-4">
                         <div className="flex items-center">
                           <Building className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                          {app.job?.company || "Unknown Company"}
+                          {app.job?.company?.name || "Unknown Company"}
                         </div>
                         <div className="flex items-center">
                           <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                          {app.job?.location || "Remote"}
+                          {app.job?.location?.city || "Remote"}
                         </div>
                         <div className="flex items-center">
                           <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
