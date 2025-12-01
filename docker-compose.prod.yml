@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${DOCKER_USERNAME}/recruitment-ai-backend:latest
+    container_name: backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - AI_SERVICE_URL=http://ai-service:8000
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - app-network
+
+  frontend:
+    image: ${DOCKER_USERNAME}/recruitment-ai-frontend:latest
+    container_name: frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  ai-service:
+    image: ${DOCKER_USERNAME}/recruitment-ai-service:latest
+    container_name: ai-service
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=production
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
