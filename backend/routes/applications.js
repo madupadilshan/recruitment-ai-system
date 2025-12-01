@@ -82,7 +82,7 @@ router.get("/my-applications", authMiddleware, async (req, res) => {
         const applications = await Application.find({ candidate: req.user.id })
             .populate({
                 path: "job",
-                select: "title company location type salary" // Select fields to display
+                select: "title company location jobType salary" // Select fields to display
             })
             .sort({ createdAt: -1 }); // Sort by newest first
 
