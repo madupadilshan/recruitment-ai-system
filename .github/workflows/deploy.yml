@@ -94,13 +94,13 @@ jobs:
           script: |
             cd recruitment-ai-system
             git pull origin main
-            
+
             # Pull new images
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             docker-compose -f docker-compose.prod.yml pull
-            
+
             # Restart containers with new images
             docker-compose -f docker-compose.prod.yml up -d
-            
+
             # Clean up unused images
             docker image prune -f

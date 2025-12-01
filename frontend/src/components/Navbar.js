@@ -29,6 +29,10 @@ function Navbar() {
       <div className="items-center hidden gap-4 md:flex">
         {(user && !isAuthPage) ? (
           <>
+            <Link to="/dashboard" className="hover:text-yellow-300">
+              🏠 Home
+            </Link>
+
             <Link to="/messages" className="hover:text-yellow-300">
               💬 Messages
             </Link>
@@ -87,6 +91,7 @@ function Navbar() {
             <div className="flex flex-col p-4 space-y-3">
               {(user && !isAuthPage) ? (
                 <>
+                  <Link to="/dashboard" className={`${isActive("/dashboard")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>🏠 Home</Link>
                   <Link to="/messages" className={`${isActive("/messages")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>💬 Messages</Link>
                   <Link to="/interviews" className={`${isActive("/interviews")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>📅 Interviews</Link>
                   <Link to="/cv-analysis" className={`${isActive("/cv-analysis")} block px-3 py-2 rounded-lg`} onClick={() => setMenuOpen(false)}>🤖 AI CV Analysis</Link>

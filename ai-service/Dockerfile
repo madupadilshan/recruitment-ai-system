@@ -4,11 +4,20 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /app
 
+# Install system dependencies required for some python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the requirements file into the container at /app
 COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Increased timeout for large downloads like PyTorch
+RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
+
+# Download spaCy model during build to cache it
+RUN python -m spacy download en_core_web_sm
 
 # Copy the rest of the application's code
 COPY . .

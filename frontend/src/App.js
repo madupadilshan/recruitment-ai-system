@@ -14,6 +14,7 @@ import ScheduleInterview from "./pages/ScheduleInterview"; // ✅ scheduling
 import CVAnalysis from "./pages/CVAnalysis"; // ✅ AI CV Analysis
 import AppliedJobs from "./pages/AppliedJobs"; // ✅ Applied Jobs
 import Navbar from "./components/Navbar";
+import BackToHome from "./components/BackToHome";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Profile from "./pages/Profile";
 import JobDetails from "./pages/JobDetails";
@@ -85,6 +86,7 @@ function App() {
     <NotificationProvider>
       <Router>
         <Navbar />
+        <BackToHome />
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
