@@ -36,6 +36,8 @@ services:
       - "8000:8000"
     environment:
       - FLASK_ENV=production
+    volumes:
+      - ./backend/uploads:/app/uploads
     networks:
       - app-network
 

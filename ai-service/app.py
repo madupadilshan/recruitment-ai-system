@@ -405,15 +405,22 @@ def analyze_profile():
             skills = []
             # Common technical skills to look for
             skill_keywords = [
-                'python', 'java', 'javascript', 'js', 'typescript', 'c++', 'c#', 'php', 'ruby',
-                'html', 'css', 'sql', 'mysql', 'postgresql', 'mongodb', 'react', 'angular', 
-                'vue', 'node.js', 'nodejs', 'express', 'django', 'flask', 'spring',
-                'git', 'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'linux', 'windows',
-                'firebase', 'android', 'ios', 'swift', 'kotlin', 'flutter', 'xamarin'
+                'python', 'java', 'javascript', 'js', 'typescript', 'c++', 'c#', 'php', 'ruby', 'go', 'rust',
+                'html', 'css', 'sql', 'mysql', 'postgresql', 'mongodb', 'react', 'angular', 'vue', 'svelte',
+                'node.js', 'nodejs', 'express', 'django', 'flask', 'spring', 'laravel', 'dotnet',
+                'git', 'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'linux', 'windows', 'bash',
+                'firebase', 'android', 'ios', 'swift', 'kotlin', 'flutter', 'react native', 'xamarin',
+                'machine learning', 'data analysis', 'artificial intelligence', 'nlp', 'opencv', 'tensorflow', 'pytorch',
+                'agile', 'scrum', 'jira', 'figma', 'photoshop', 'illustrator'
             ]
             
             for skill in skill_keywords:
-                if skill in text:
+                # Check for word boundary to avoid partial matches (e.g. "java" in "javascript")
+                # Simple check: if skill is short, use boundary. If long, simple inclusion.
+                if len(skill) <= 3:
+                     if f" {skill} " in f" {text} " or f" {skill}," in f" {text} " or f" {skill}\n" in f" {text} ":
+                        skills.append(skill.title())
+                elif skill in text:
                     skills.append(skill.title())
             
             return list(set(skills))  # Remove duplicates
@@ -423,10 +430,16 @@ def analyze_profile():
             education = []
             
             # Look for degree keywords
-            if any(word in text for word in ['bachelor', 'degree', 'bsc', 'b.sc', 'undergraduate']):
+            if any(word in text for word in ['bachelor', 'degree', 'bsc', 'b.sc', 'undergraduate', 'master', 'msc', 'phd', 'diploma']):
+                degree_type = "Degree"
+                if 'master' in text or 'msc' in text: degree_type = "Master's Degree"
+                elif 'phd' in text: degree_type = "PhD"
+                elif 'bachelor' in text or 'bsc' in text: degree_type = "Bachelor's Degree"
+                elif 'diploma' in text: degree_type = "Diploma"
+
                 education.append({
-                    "degree": "Bachelor's Degree" if 'bachelor' in text else "Degree",
-                    "field": "Computer Science/Engineering" if any(word in text for word in ['computer', 'software', 'engineering', 'technology']) else "Not specified",
+                    "degree": degree_type,
+                    "field": "Computer Science/Engineering" if any(word in text for word in ['computer', 'software', 'engineering', 'technology', 'it', 'information']) else "Not specified",
                     "institution": "University" if 'university' in text else "Educational Institution",
                     "year": "Not specified"
                 })
@@ -441,7 +454,7 @@ def analyze_profile():
             # Look for explicit experience mentions
             experience_patterns = [
                 'years of experience', 'years experience', 'work experience',
-                'professional experience', 'working experience'
+                'professional experience', 'working experience', 'employment history'
             ]
             
             # Only count experience if explicitly mentioned
@@ -452,23 +465,21 @@ def analyze_profile():
                 if year_matches:
                     experience_years = max([int(year) for year in year_matches])
             
-            # Look for job titles/positions only if experience is mentioned
-            if experience_years > 0:
-                job_titles = []
-                if 'developer' in text:
-                    job_titles.append("Software Developer")
-                if 'engineer' in text:
-                    job_titles.append("Software Engineer")
-                if 'programmer' in text:
-                    job_titles.append("Programmer")
-                
-                if job_titles:
-                    positions = [{
-                        "title": job_titles[0],
-                        "company": "Previous Company",
-                        "duration": f"~{experience_years} years",
-                        "description": "Work experience as mentioned in CV"
-                    }]
+            # Look for job titles/positions
+            job_titles = []
+            if 'senior' in text: job_titles.append("Senior Developer")
+            if 'lead' in text: job_titles.append("Tech Lead")
+            if 'developer' in text and 'senior' not in text: job_titles.append("Software Developer")
+            if 'engineer' in text and 'senior' not in text: job_titles.append("Software Engineer")
+            if 'intern' in text: job_titles.append("Intern")
+            
+            if job_titles:
+                positions = [{
+                    "title": job_titles[0],
+                    "company": "Previous Company",
+                    "duration": f"~{experience_years} years" if experience_years > 0 else "Not specified",
+                    "description": "Work experience as mentioned in CV"
+                }]
             
             return {"totalYears": experience_years, "positions": positions}
         
