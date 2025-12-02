@@ -10,7 +10,6 @@ import {
   getAiSummary,
   chatWithCv
 } from "../utils/aiService.js";
-import { extractTextFromFile } from "../utils/textExtractor.js";
 import User from "../models/User.js";
 import path from "path";
 

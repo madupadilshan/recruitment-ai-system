@@ -621,8 +621,8 @@ export const processMultiLanguageCV = async (filePath, detectedLanguage = null) 
 
     console.log("🌐 Processing CV file:", filePath);
 
-    // Extract actual text from the uploaded file
-    const extractedText = await extractTextFromFile(filePath);
+    // Extract actual text from the uploaded file using AI Service (avoids OOM in Node.js)
+    const extractedText = await extractCvText(filePath);
 
     // Simple language detection based on content
     let detectedLang = detectedLanguage || "english";
@@ -660,7 +660,7 @@ export const processMultiLanguageCV = async (filePath, detectedLanguage = null) 
     console.error("❌ Multi-Language Processing Error:", err.message);
 
     // Fallback with sample text
-    const fallbackText = await extractTextFromFile(filePath); // This will use fallback text
+    const fallbackText = "Error extracting text from CV. Please ensure the file is a valid PDF.";
 
     return {
       originalText: fallbackText,
