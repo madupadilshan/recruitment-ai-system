@@ -700,10 +700,7 @@ def ai_summary():
             }), 503
 
         # Initialize model
-        try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
-        except:
-            model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-pro')
 
         prompt = f"""
         You are an expert technical recruiter. Analyze the following CV text and provide a professional summary.
