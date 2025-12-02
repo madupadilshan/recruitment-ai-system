@@ -693,7 +693,10 @@ def ai_summary():
             }), 503
 
         # Initialize model
-        model = genai.GenerativeModel('gemini-pro')
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+        except:
+            model = genai.GenerativeModel('gemini-pro')
 
         prompt = f"""
         You are an expert technical recruiter. Analyze the following CV text and provide a professional summary.
@@ -755,7 +758,10 @@ def ai_chat():
                 "message": "Gemini API key not configured."
             }), 503
 
-        model = genai.GenerativeModel('gemini-pro')
+        try:
+            model = genai.GenerativeModel('gemini-1.5-flash')
+        except:
+            model = genai.GenerativeModel('gemini-pro')
 
         prompt = f"""
         Context: You are an AI assistant helping a recruiter analyze a candidate's CV.
