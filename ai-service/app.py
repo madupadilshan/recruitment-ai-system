@@ -181,23 +181,47 @@ def analyze_cv():
 
         # Try to get text from request or extract from file
         cv_text = data.get('cv_text', '')
-        if not cv_text and file_path and os.path.exists(file_path):
-            try:
-                import fitz  # PyMuPDF
-                doc = fitz.open(file_path)
-                cv_text = ""
-                for page in doc:
-                    cv_text += page.get_text()
-                doc.close()
-            except Exception as e:
-                logger.error(f"Error extracting text from file: {e}")
-
-        # If still no text, use the sample (fallback) - ONLY for testing
-        if not cv_text:
-            cv_text = "sample cv content bachelor degree software engineering python javascript html css react programming"
+        
+        if not cv_text and file_path:
+            if os.path.exists(file_path):
+                try:
+                    logger.info(f"Attempting to extract text from: {file_path}")
+                    import fitz  # PyMuPDF
+                    doc = fitz.open(file_path)
+                    cv_text = ""
+                    for page in doc:
+                        cv_text += page.get_text()
+                    doc.close()
+                    logger.info(f"Extracted {len(cv_text)} characters from PDF")
+                    if len(cv_text) < 100:
+                        logger.warning("Extracted text is very short. PDF might be an image or empty.")
+                except Exception as e:
+                    logger.error(f"Error extracting text from file: {e}")
+            else:
+                logger.error(f"File not found at path: {file_path}")
+        
+        # If still no text, we cannot analyze
+        if not cv_text or len(cv_text.strip()) < 10:
+            logger.warning("No valid text found for analysis. Returning error.")
+            return jsonify({
+                "overallScore": 0,
+                "skillsMatch": 0,
+                "experienceMatch": 0,
+                "extractedSkills": [],
+                "matchingSkills": [],
+                "missingSkills": required_skills,
+                "recommendation": "Error - Could not read CV file",
+                "aiSummary": {
+                    "strengths": [],
+                    "weaknesses": ["CV file appears to be empty or unreadable"],
+                    "overallAssessment": "Could not analyze CV content.",
+                    "recommendedActions": ["Please upload a text-based PDF file"],
+                    "fitScore": "Unknown",
+                    "experienceLevel": "Unknown"
+                }
+            })
 
         logger.info(f"Analyzing CV with Gemini. Job Desc length: {len(job_description)}")
-
         # ---------------------------------------------------------
         # STRATEGY 1: USE GOOGLE GEMINI (SMART AI)
         # ---------------------------------------------------------
