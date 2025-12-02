@@ -235,7 +235,7 @@ def analyze_cv():
                 except:
                     model = genai.GenerativeModel('gemini-pro')
                     logger.info("Using Gemini Pro model")
-                
+
                 prompt = f"""
                 You are an expert AI Recruiter. Analyze the following Candidate CV against the Job Description.
 
@@ -765,10 +765,8 @@ def ai_chat():
                 "message": "Gemini API key not configured."
             }), 503
 
-        try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
-        except:
-            model = genai.GenerativeModel('gemini-pro')
+        # Use gemini-pro as it is the most widely supported model in the library
+        model = genai.GenerativeModel('gemini-pro')
 
         prompt = f"""
         Context: You are an AI assistant helping a recruiter analyze a candidate's CV.
