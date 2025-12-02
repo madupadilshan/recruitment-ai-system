@@ -227,8 +227,15 @@ def analyze_cv():
         # ---------------------------------------------------------
         if GEMINI_API_KEY:
             try:
-                model = genai.GenerativeModel('gemini-pro')
-
+                # Use gemini-1.5-flash which is faster and more reliable for free tier
+                # Fallback to gemini-pro if flash is not available
+                try:
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    logger.info("Using Gemini 1.5 Flash model")
+                except:
+                    model = genai.GenerativeModel('gemini-pro')
+                    logger.info("Using Gemini Pro model")
+                
                 prompt = f"""
                 You are an expert AI Recruiter. Analyze the following Candidate CV against the Job Description.
 
