@@ -181,7 +181,7 @@ def analyze_cv():
 
         # Try to get text from request or extract from file
         cv_text = data.get('cv_text', '')
-        
+
         if not cv_text and file_path:
             if os.path.exists(file_path):
                 try:
@@ -199,7 +199,7 @@ def analyze_cv():
                     logger.error(f"Error extracting text from file: {e}")
             else:
                 logger.error(f"File not found at path: {file_path}")
-        
+
         # If still no text, we cannot analyze
         if not cv_text or len(cv_text.strip()) < 10:
             logger.warning("No valid text found for analysis. Returning error.")

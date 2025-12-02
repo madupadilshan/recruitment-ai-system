@@ -36,6 +36,7 @@ services:
       - "8000:8000"
     environment:
       - FLASK_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - ./backend/uploads:/app/uploads
     networks:
