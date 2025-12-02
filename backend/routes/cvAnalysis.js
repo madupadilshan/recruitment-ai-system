@@ -10,10 +10,18 @@ import {
   processMultiLanguage,
   assessQuality,
   comprehensiveAnalysis,
-  getAnalysisHistory
+  getAnalysisHistory,
+  generateSummary,
+  chatWithAi
 } from '../controllers/cvAnalysisController.js';
 
 const router = express.Router();
+
+// 🤖 AI Summary
+router.post('/summary', authMiddleware, generateSummary);
+
+// 💬 AI Chat
+router.post('/chat', authMiddleware, chatWithAi);
 
 // 🧪 Test endpoint for debugging
 router.get('/test', (req, res) => {
@@ -55,7 +63,7 @@ router.post('/comprehensive', authMiddleware, upload.single("cvFile"), comprehen
 // 🧪 Test comprehensive analysis without file upload
 router.post('/comprehensive-test', authMiddleware, (req, res) => {
   console.log('🧪 Test comprehensive analysis called');
-  
+
   const mockAnalysisResult = {
     success: true,
     data: {
@@ -99,7 +107,7 @@ router.post('/comprehensive-test', authMiddleware, (req, res) => {
     },
     message: "Test comprehensive CV analysis completed successfully"
   };
-  
+
   res.json(mockAnalysisResult);
 });
 

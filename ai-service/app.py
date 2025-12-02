@@ -2,10 +2,23 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import logging
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Configure Gemini API
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    logger.info("Gemini API configured successfully")
+else:
+    logger.warning("GEMINI_API_KEY not found. AI features will be limited.")
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -24,16 +37,16 @@ def analyze_resume():
     """Analyze resume content for job matching"""
     try:
         data = request.get_json()
-        
+
         if not data or 'resume_text' not in data:
             return jsonify({
                 "status": "error",
                 "message": "No resume text provided"
             }), 400
-        
+
         resume_text = data['resume_text']
         job_description = data.get('job_description', '')
-        
+
         # Placeholder AI analysis logic
         # TODO: Implement actual AI analysis using transformers/spacy
         analysis_result = {
@@ -49,12 +62,12 @@ def analyze_resume():
                 "Add more details about specific technologies used"
             ]
         }
-        
+
         return jsonify({
             "status": "success",
             "data": analysis_result
         })
-        
+
     except Exception as e:
         logger.error(f"Error analyzing resume: {str(e)}")
         return jsonify({
@@ -67,16 +80,16 @@ def match_candidates():
     """Match candidates to job requirements"""
     try:
         data = request.get_json()
-        
+
         if not data or 'job_description' not in data:
             return jsonify({
                 "status": "error",
                 "message": "No job description provided"
             }), 400
-        
+
         job_description = data['job_description']
         candidates = data.get('candidates', [])
-        
+
         # Placeholder matching logic
         # TODO: Implement actual AI matching using transformers
         matched_candidates = []
@@ -88,7 +101,7 @@ def match_candidates():
                 "matching_skills": ["Python", "React"],  # Placeholder
                 "recommendation": "Strong candidate for the position"
             })
-        
+
         return jsonify({
             "status": "success",
             "data": {
@@ -96,7 +109,7 @@ def match_candidates():
                 "matched_candidates": matched_candidates
             }
         })
-        
+
     except Exception as e:
         logger.error(f"Error matching candidates: {str(e)}")
         return jsonify({
@@ -109,22 +122,22 @@ def extract_skills():
     """Extract skills from text using NLP"""
     try:
         data = request.get_json()
-        
+
         if not data or 'text' not in data:
             return jsonify({
                 "status": "error",
                 "message": "No text provided"
             }), 400
-        
+
         text = data['text']
-        
+
         # Placeholder skill extraction
         # TODO: Implement actual NLP skill extraction using spaCy
         extracted_skills = [
-            "Python", "JavaScript", "React", "Node.js", 
+            "Python", "JavaScript", "React", "Node.js",
             "MongoDB", "Machine Learning", "Data Analysis"
         ]
-        
+
         return jsonify({
             "status": "success",
             "data": {
@@ -132,7 +145,7 @@ def extract_skills():
                 "confidence_scores": {skill: 0.85 for skill in extracted_skills}
             }
         })
-        
+
     except Exception as e:
         logger.error(f"Error extracting skills: {str(e)}")
         return jsonify({
@@ -145,74 +158,74 @@ def analyze_cv():
     """Analyze CV file for job matching with REAL data extraction - no false information"""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({
                 "status": "error",
                 "message": "No data provided"
             }), 400
-        
+
         file_path = data.get('file_path', '')
         job_description = data.get('job_description', '').lower()
         required_skills = [skill.lower() for skill in (data.get('required_skills', []) or [])]
         required_years = data.get('required_years', 0)
-        
+
         logger.info(f"Analyzing CV for job matching. Required skills: {required_skills}, Required years: {required_years}")
-        
+
         # Extract text from CV (simplified - in real scenario we'd use PDF parsing)
         cv_text = "sample cv content bachelor degree software engineering python javascript html css react programming"
-        
+
         # Extract ACTUAL skills from CV text - NO false data
         def extract_actual_skills(text, available_skills):
             found_skills = []
             text = text.lower()
-            
+
             for skill in available_skills:
                 if skill.lower() in text:
                     found_skills.append(skill)
-            
+
             # Also check for common programming skills
             skill_keywords = [
                 'python', 'javascript', 'java', 'html', 'css', 'react', 'node.js', 'sql',
                 'mongodb', 'express', 'angular', 'vue', 'php', 'c++', 'c#', 'ruby'
             ]
-            
+
             for skill in skill_keywords:
                 if skill in text and skill not in [s.lower() for s in found_skills]:
                     found_skills.append(skill.title())
-            
+
             return found_skills
-        
+
         def extract_actual_experience(text):
             """Extract actual experience from CV - only if explicitly mentioned"""
             experience_years = 0
-            
+
             # Look for experience indicators
             if any(indicator in text for indicator in ['years of experience', 'years experience', 'working', 'employed']):
                 import re
                 year_matches = re.findall(r'(\d+)\s*(?:years?|yr)', text)
                 if year_matches:
                     experience_years = max([int(year) for year in year_matches])
-            
+
             return experience_years
-        
+
         # Extract actual information from CV
         extracted_skills = extract_actual_skills(cv_text, required_skills + ['Python', 'JavaScript', 'HTML', 'CSS', 'React'])
         actual_experience_years = extract_actual_experience(cv_text)
-        
+
         # Calculate matching skills
         matching_skills = []
         for skill in required_skills:
             for extracted in extracted_skills:
                 if skill.lower() == extracted.lower():
                     matching_skills.append(extracted)
-        
+
         # Calculate missing skills
         missing_skills = [skill for skill in required_skills if skill.lower() not in [s.lower() for s in matching_skills]]
-        
+
         # Calculate realistic scores based on ACTUAL data
         skills_match_score = int((len(matching_skills) / max(len(required_skills), 1)) * 100) if required_skills else 70
-        
+
         # Experience matching based on ACTUAL experience
         if required_years == 0:
             experience_match_score = 100  # No experience required
@@ -222,14 +235,14 @@ def analyze_cv():
             experience_match_score = 100  # Meets or exceeds requirement
         else:
             experience_match_score = int((actual_experience_years / required_years) * 80) + 20  # Partial credit
-        
+
         # Overall score based on actual matching
         overall_score = int((skills_match_score * 0.7) + (experience_match_score * 0.3))
-        
+
         # Create AI summary based on ACTUAL findings
         is_fresh_graduate = actual_experience_years == 0
         has_relevant_skills = len(matching_skills) > 0
-        
+
         strengths = []
         if has_relevant_skills:
             strengths.append(f"Relevant technical skills: {', '.join(matching_skills[:3])}")
@@ -238,13 +251,13 @@ def analyze_cv():
             strengths.append("Eager to learn and grow professionally")
         else:
             strengths.append(f"{actual_experience_years} years of professional experience")
-        
+
         weaknesses = []
         if missing_skills:
             weaknesses.append(f"Missing required skills: {', '.join(missing_skills[:3])}")
         if is_fresh_graduate and required_years > 0:
             weaknesses.append(f"No professional experience (requires {required_years} years)")
-        
+
         # Realistic assessment
         if overall_score >= 80:
             fit_score = "Excellent Fit"
@@ -258,7 +271,7 @@ def analyze_cv():
         else:
             fit_score = "Limited Fit"
             assessment = "Candidate has limited alignment with job requirements."
-        
+
         analysis_result = {
             "overallScore": overall_score,
             "skillsMatch": skills_match_score,
@@ -280,11 +293,11 @@ def analyze_cv():
                 "experienceLevel": "Fresh Graduate" if is_fresh_graduate else f"{actual_experience_years} Years Experience"
             }
         }
-        
+
         logger.info(f"Analysis complete: Overall {overall_score}%, Skills {skills_match_score}%, Experience {experience_match_score}%")
-        
+
         return jsonify(analysis_result)
-        
+
     except Exception as e:
         logger.error(f"Error analyzing CV: {str(e)}")
         return jsonify({
@@ -298,16 +311,16 @@ def bulk_analyze():
     """Bulk analyze CV against multiple jobs (for recommendations)"""
     try:
         data = request.get_json()
-        
+
         if not data:
             return jsonify({
                 "status": "error",
                 "message": "No data provided"
             }), 400
-        
+
         cv_text = data.get('cv_text', '')
         jobs = data.get('jobs', [])
-        
+
         # Placeholder bulk analysis logic
         # TODO: Implement actual bulk job matching
         analyses = []
@@ -320,11 +333,11 @@ def bulk_analyze():
                 "recommendation": f"Good fit for {job.get('title', 'this position')}"
             }
             analyses.append(job_analysis)
-        
+
         return jsonify({
             "analyses": analyses
         })
-        
+
     except Exception as e:
         logger.error(f"Error in bulk analysis: {str(e)}")
         return jsonify({
@@ -336,49 +349,49 @@ def extract_text():
     """Extract text from uploaded PDF file using PyMuPDF"""
     try:
         data = request.get_json()
-        
+
         if not data or 'file_path' not in data:
             return jsonify({
                 "status": "error",
                 "message": "No file path provided"
             }), 400
-        
+
         file_path = data['file_path']
         logger.info(f"Extracting text from PDF: {file_path}")
-        
+
         try:
             import fitz  # PyMuPDF
             import os
-            
+
             # Check if file exists
             if not os.path.exists(file_path):
                 logger.error(f"PDF file not found: {file_path}")
                 return jsonify({"text": ""})
-            
+
             # Open and extract text from PDF
             pdf_document = fitz.open(file_path)
             extracted_text = ""
-            
+
             for page_num in range(len(pdf_document)):
                 page = pdf_document.load_page(page_num)
                 page_text = page.get_text()
                 extracted_text += page_text + "\n"
-            
+
             pdf_document.close()
-            
+
             # Clean up the text
             extracted_text = extracted_text.strip()
             logger.info(f"Successfully extracted {len(extracted_text)} characters from PDF")
-            
+
             return jsonify({
                 "text": extracted_text
             })
-            
+
         except Exception as pdf_error:
             logger.error(f"PDF extraction error: {str(pdf_error)}")
             # Return empty text if PDF extraction fails
             return jsonify({"text": ""})
-        
+
     except Exception as e:
         logger.error(f"Error extracting text: {str(e)}")
         return jsonify({
@@ -390,15 +403,15 @@ def analyze_profile():
     """Comprehensive CV analysis to extract ONLY actual information from CV text - NO mock data"""
     try:
         data = request.get_json()
-        
+
         if not data or 'cv_text' not in data:
             return jsonify({
                 "status": "error",
                 "message": "No CV text provided"
             }), 400
-        
+
         cv_text = data['cv_text'].lower() if data['cv_text'] else ""
-        
+
         # Extract actual information from CV text - NO assumptions or mock data
         def extract_skills_from_text(text):
             """Extract programming/technical skills mentioned in CV"""
@@ -413,7 +426,7 @@ def analyze_profile():
                 'machine learning', 'data analysis', 'artificial intelligence', 'nlp', 'opencv', 'tensorflow', 'pytorch',
                 'agile', 'scrum', 'jira', 'figma', 'photoshop', 'illustrator'
             ]
-            
+
             for skill in skill_keywords:
                 # Check for word boundary to avoid partial matches (e.g. "java" in "javascript")
                 # Simple check: if skill is short, use boundary. If long, simple inclusion.
@@ -422,13 +435,13 @@ def analyze_profile():
                         skills.append(skill.title())
                 elif skill in text:
                     skills.append(skill.title())
-            
+
             return list(set(skills))  # Remove duplicates
-        
+
         def extract_education_from_text(text):
             """Extract education information from CV"""
             education = []
-            
+
             # Look for degree keywords
             if any(word in text for word in ['bachelor', 'degree', 'bsc', 'b.sc', 'undergraduate', 'master', 'msc', 'phd', 'diploma']):
                 degree_type = "Degree"
@@ -443,20 +456,20 @@ def analyze_profile():
                     "institution": "University" if 'university' in text else "Educational Institution",
                     "year": "Not specified"
                 })
-            
+
             return education
-        
+
         def extract_experience_from_text(text):
             """Extract work experience from CV - only if explicitly mentioned"""
             experience_years = 0
             positions = []
-            
+
             # Look for explicit experience mentions
             experience_patterns = [
                 'years of experience', 'years experience', 'work experience',
                 'professional experience', 'working experience', 'employment history'
             ]
-            
+
             # Only count experience if explicitly mentioned
             if any(pattern in text for pattern in experience_patterns):
                 # Try to extract number of years if mentioned
@@ -464,7 +477,7 @@ def analyze_profile():
                 year_matches = re.findall(r'(\d+)\s*(?:years?|yr)', text)
                 if year_matches:
                     experience_years = max([int(year) for year in year_matches])
-            
+
             # Look for job titles/positions
             job_titles = []
             if 'senior' in text: job_titles.append("Senior Developer")
@@ -472,7 +485,7 @@ def analyze_profile():
             if 'developer' in text and 'senior' not in text: job_titles.append("Software Developer")
             if 'engineer' in text and 'senior' not in text: job_titles.append("Software Engineer")
             if 'intern' in text: job_titles.append("Intern")
-            
+
             if job_titles:
                 positions = [{
                     "title": job_titles[0],
@@ -480,21 +493,21 @@ def analyze_profile():
                     "duration": f"~{experience_years} years" if experience_years > 0 else "Not specified",
                     "description": "Work experience as mentioned in CV"
                 }]
-            
+
             return {"totalYears": experience_years, "positions": positions}
-        
+
         def extract_personal_info(text):
             """Extract contact information if available"""
             import re
-            
+
             # Extract email
             email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
             email = email_match.group() if email_match else "Not specified"
-            
+
             # Extract phone (basic pattern)
             phone_match = re.search(r'[\+]?[1-9]?[0-9]{7,15}', text)
             phone = phone_match.group() if phone_match else "Not specified"
-            
+
             return {
                 "name": "Candidate Name",  # Can't reliably extract name
                 "email": email,
@@ -502,24 +515,24 @@ def analyze_profile():
                 "location": "Sri Lanka" if 'sri lanka' in text else "Not specified",
                 "linkedIn": "Not specified"
             }
-        
+
         # Extract actual data from CV
         extracted_skills = extract_skills_from_text(cv_text)
         extracted_education = extract_education_from_text(cv_text)
         extracted_experience = extract_experience_from_text(cv_text)
         extracted_personal = extract_personal_info(cv_text)
-        
+
         # Create professional summary based on actual findings
         is_fresh_graduate = extracted_experience["totalYears"] == 0
         has_education = len(extracted_education) > 0
-        
+
         if is_fresh_graduate and has_education:
             summary = "Recent graduate with academic background in computer science/engineering. Seeking opportunities to apply theoretical knowledge in practical software development projects."
         elif extracted_experience["totalYears"] > 0:
             summary = f"Professional with {extracted_experience['totalYears']} years of experience in software development. Skilled in various technologies and committed to delivering quality solutions."
         else:
             summary = "Professional seeking opportunities in software development and technology."
-        
+
         # Only return data that was actually found in the CV
         profile_data = {
             "personalInfo": extracted_personal,
@@ -540,12 +553,12 @@ def analyze_profile():
                 ]
             }
         }
-        
+
         return jsonify({
             "status": "success",
             "data": profile_data
         })
-        
+
     except Exception as e:
         logger.error(f"Error analyzing profile: {str(e)}")
         return jsonify({
@@ -553,9 +566,113 @@ def analyze_profile():
             "message": "Profile analysis failed"
         }), 500
 
+@app.route('/ai-summary', methods=['POST'])
+def ai_summary():
+    """Generate a smart summary of the CV using Google Gemini"""
+    try:
+        data = request.get_json()
+        if not data or 'cv_text' not in data:
+            return jsonify({"status": "error", "message": "No CV text provided"}), 400
+
+        cv_text = data['cv_text']
+
+        if not GEMINI_API_KEY:
+            return jsonify({
+                "status": "error",
+                "message": "Gemini API key not configured. Please add GEMINI_API_KEY to .env file."
+            }), 503
+
+        # Initialize model
+        model = genai.GenerativeModel('gemini-pro')
+
+        prompt = f"""
+        You are an expert technical recruiter. Analyze the following CV text and provide a professional summary.
+
+        CV Text:
+        {cv_text[:10000]}
+
+        Please provide a JSON response with the following structure:
+        {{
+            "summary": "A concise 3-4 sentence professional summary",
+            "key_skills": ["Skill 1", "Skill 2", "Skill 3"],
+            "experience_highlight": "Brief highlight of their experience",
+            "suggested_roles": ["Role 1", "Role 2"],
+            "rating": "Score out of 10 based on clarity and content"
+        }}
+        """
+
+        response = model.generate_content(prompt)
+
+        # Clean up response to ensure it's valid JSON if the model adds markdown formatting
+        response_text = response.text.replace('```json', '').replace('```', '').strip()
+
+        import json
+        try:
+            ai_response = json.loads(response_text)
+        except:
+            # Fallback if JSON parsing fails
+            ai_response = {
+                "summary": response.text,
+                "key_skills": [],
+                "experience_highlight": "See summary",
+                "suggested_roles": [],
+                "rating": "N/A"
+            }
+
+        return jsonify({
+            "status": "success",
+            "data": ai_response
+        })
+
+    except Exception as e:
+        logger.error(f"Error in AI summary: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/ai-chat', methods=['POST'])
+def ai_chat():
+    """Chat with the CV context using Google Gemini"""
+    try:
+        data = request.get_json()
+        if not data or 'cv_text' not in data or 'question' not in data:
+            return jsonify({"status": "error", "message": "CV text and question are required"}), 400
+
+        cv_text = data['cv_text']
+        question = data['question']
+
+        if not GEMINI_API_KEY:
+            return jsonify({
+                "status": "error",
+                "message": "Gemini API key not configured."
+            }), 503
+
+        model = genai.GenerativeModel('gemini-pro')
+
+        prompt = f"""
+        Context: You are an AI assistant helping a recruiter analyze a candidate's CV.
+
+        CV Content:
+        {cv_text[:10000]}
+
+        Recruiter's Question: {question}
+
+        Answer the question based ONLY on the CV content provided above. If the information is not in the CV, say "I cannot find this information in the CV."
+        Keep the answer concise and professional.
+        """
+
+        response = model.generate_content(prompt)
+
+        return jsonify({
+            "status": "success",
+            "answer": response.text
+        })
+
+    except Exception as e:
+        logger.error(f"Error in AI chat: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
     debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
-    
+
     logger.info(f"Starting AI Service on port {port}")
     app.run(host='0.0.0.0', port=port, debug=debug_mode)

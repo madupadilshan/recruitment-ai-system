@@ -6,11 +6,51 @@ import {
   quantifyAchievements,
   processMultiLanguageCV,
   assessCVQuality,
-  extractCvText
+  extractCvText,
+  getAiSummary,
+  chatWithCv
 } from "../utils/aiService.js";
 import { extractTextFromFile } from "../utils/textExtractor.js";
 import User from "../models/User.js";
 import path from "path";
+
+// 🤖 Generate AI Summary
+export const generateSummary = async (req, res) => {
+  try {
+    const { cvText } = req.body;
+
+    if (!cvText) {
+      return res.status(400).json({ error: "CV text is required" });
+    }
+
+    console.log("🤖 Generating AI summary...");
+    const summaryResult = await getAiSummary(cvText);
+
+    res.json(summaryResult);
+  } catch (err) {
+    console.error("❌ AI Summary Error:", err.message);
+    res.status(500).json({ error: "Failed to generate summary" });
+  }
+};
+
+// 💬 Chat with AI about CV
+export const chatWithAi = async (req, res) => {
+  try {
+    const { cvText, question } = req.body;
+
+    if (!cvText || !question) {
+      return res.status(400).json({ error: "CV text and question are required" });
+    }
+
+    console.log("💬 Chatting with AI...");
+    const chatResult = await chatWithCv(cvText, question);
+
+    res.json(chatResult);
+  } catch (err) {
+    console.error("❌ AI Chat Error:", err.message);
+    res.status(500).json({ error: "Failed to chat with AI" });
+  }
+};
 
 // 🚀 Enhanced Skills Analysis
 export const analyzeSkills = async (req, res) => {
@@ -46,9 +86,9 @@ export const analyzeSkills = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Skills Analysis Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to analyze skills",
-      details: err.message 
+      details: err.message
     });
   }
 };
@@ -87,9 +127,9 @@ export const validateCVExperience = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Experience Validation Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to validate experience",
-      details: err.message 
+      details: err.message
     });
   }
 };
@@ -126,9 +166,9 @@ export const analyzeAchievements = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Achievement Analysis Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to analyze achievements",
-      details: err.message 
+      details: err.message
     });
   }
 };
@@ -155,9 +195,9 @@ export const processMultiLanguage = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Multi-Language Processing Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to process multi-language CV",
-      details: err.message 
+      details: err.message
     });
   }
 };
@@ -184,9 +224,9 @@ export const assessQuality = async (req, res) => {
 
   } catch (err) {
     console.error("❌ CV Quality Assessment Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to assess CV quality",
-      details: err.message 
+      details: err.message
     });
   }
 };
@@ -202,9 +242,9 @@ export const comprehensiveAnalysis = async (req, res) => {
 
     if (!req.file) {
       console.log("❌ No file uploaded");
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: "CV file is required" 
+        error: "CV file is required"
       });
     }
 
@@ -237,7 +277,7 @@ export const comprehensiveAnalysis = async (req, res) => {
 
     // Step 2: Parallel analysis with error handling
     let skillsAnalysis, experienceValidation, achievementsAnalysis, qualityAssessment;
-    
+
     try {
       console.log("🔄 Starting parallel AI analysis...");
       [
@@ -254,10 +294,10 @@ export const comprehensiveAnalysis = async (req, res) => {
       console.log("✅ All AI analysis completed");
     } catch (error) {
       console.error("❌ AI analysis error:", error.message);
-      return res.status(500).json({ 
+      return res.status(500).json({
         success: false,
-        error: "AI analysis failed", 
-        details: error.message 
+        error: "AI analysis failed",
+        details: error.message
       });
     }
 
@@ -266,7 +306,7 @@ export const comprehensiveAnalysis = async (req, res) => {
       const user = await User.findById(userId);
       if (user) {
         console.log("👤 Updating user profile...");
-        
+
         // Update skills
         user.skills = skillsAnalysis.technicalSkills || [];
         user.softSkills = skillsAnalysis.softSkills || [];
@@ -334,10 +374,10 @@ export const comprehensiveAnalysis = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Comprehensive Analysis Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: "Failed to perform comprehensive analysis",
-      details: err.message 
+      details: err.message
     });
   }
 };
@@ -373,9 +413,9 @@ export const getAnalysisHistory = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Get Analysis History Error:", err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to get analysis history",
-      details: err.message 
+      details: err.message
     });
   }
 };
