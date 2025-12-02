@@ -1,7 +1,6 @@
 // recruitment-ai-system/backend/utils/aiService.js
 
 import axios from "axios";
-import { extractTextFromFile } from "./textExtractor.js";
 
 const AI_BASE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:5001";
 
