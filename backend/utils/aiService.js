@@ -18,6 +18,10 @@ export const getAnalysisFromFile = async (filePath, job) => {
     return res.data;
   } catch (err) {
     console.error("❌ AI Analysis Service Error:", err.message);
+    if (err.response) {
+      console.error("🔴 AI Service Response Data:", JSON.stringify(err.response.data));
+      console.error("🔴 AI Service Status:", err.response.status);
+    }
     return { error: true, message: "AI analysis failed.", overallScore: 0 };
   }
 };

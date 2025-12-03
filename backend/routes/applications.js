@@ -19,9 +19,18 @@ router.post("/upload", upload.single("cvFile"), async (req, res) => {
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
-    const absolutePath = path.resolve(req.file.path);
-    const analysisResult = await getAnalysisFromFile(absolutePath, job);
-    const cvText = await extractCvText(absolutePath);
+    
+    // Construct the absolute path for the Docker container
+    // Both backend and ai-service mount the uploads volume to /app/uploads
+    const dockerFilePath = `/app/uploads/${req.file.filename}`;
+    
+    console.log(`📤 Sending file to AI Service: ${dockerFilePath}`);
+    
+    const analysisResult = await getAnalysisFromFile(dockerFilePath, job);
+    
+    // For local text extraction, we can use the local path
+    const localPath = path.resolve(req.file.path);
+    const cvText = await extractCvText(localPath);
     if (cvText) {
       await User.findByIdAndUpdate(candidateId, {
         profileSummary: cvText.slice(0, 1500),
