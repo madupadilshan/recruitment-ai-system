@@ -46,8 +46,8 @@ app.use("/api/cv", cvAnalysisRoutes); // ✅ AI CV analysis routes
 // Health check endpoint for Docker
 app.get("/health", (req, res) => {
   const memUsage = process.memoryUsage();
-  res.json({ 
-    status: "healthy", 
+  res.json({
+    status: "healthy",
     uptime: process.uptime(),
     memory: {
       heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
