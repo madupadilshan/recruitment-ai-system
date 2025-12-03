@@ -43,6 +43,26 @@ export const extractCvText = async (filePath) => {
   }
 };
 
+// 🎯 NEW: AI-Powered Job Matching using Gemini
+export const getAIJobMatches = async (candidateProfile, jobs) => {
+  try {
+    console.log(`🎯 Requesting AI job matching for ${jobs.length} jobs`);
+    const res = await axios.post(`${AI_BASE_URL}/match-jobs`, {
+      candidateProfile: candidateProfile,
+      jobs: jobs,
+    }, { timeout: 120000 }); // 2 minutes timeout
+
+    console.log("✅ AI Job Matching successful");
+    return res.data;
+  } catch (err) {
+    console.error("❌ AI Job Matching Error:", err.message);
+    if (err.response) {
+      console.error("🔴 AI Service Response:", JSON.stringify(err.response.data));
+    }
+    return { status: "error", error: err.message, matchedJobs: [] };
+  }
+};
+
 // ✅ NEW function for comprehensive profile analysis
 export const analyzeProfileFromCV = async (cvText) => {
   try {

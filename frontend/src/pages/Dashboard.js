@@ -342,17 +342,40 @@ function Dashboard() {
                   <div className="mt-3">
                     <p className="text-sm font-medium text-green-700 mb-1">✅ Your Matching Skills:</p>
                     <div className="flex flex-wrap gap-1">
-                      {job.matchingSkills.slice(0, 3).map((skill, index) => (
+                      {job.matchingSkills.slice(0, 5).map((skill, index) => (
                         <span key={index} className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                           {skill}
                         </span>
                       ))}
-                      {job.matchingSkills.length > 3 && (
+                      {job.matchingSkills.length > 5 && (
                         <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                          +{job.matchingSkills.length - 3} more
+                          +{job.matchingSkills.length - 5} more
                         </span>
                       )}
                     </div>
+                  </div>
+                )}
+                
+                {/* Show missing skills (AI recommendation) */}
+                {showRecommended && job.missingSkills && job.missingSkills.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-orange-700 mb-1">📚 Skills to Learn:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {job.missingSkills.slice(0, 3).map((skill, index) => (
+                        <span key={index} className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* AI Recommendation text */}
+                {showRecommended && job.aiRecommendation && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-blue-700">
+                      🤖 {job.aiRecommendation}
+                    </p>
                   </div>
                 )}
 

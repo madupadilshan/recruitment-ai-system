@@ -3,8 +3,9 @@
 import Job from "../models/Job.js";
 import User from "../models/User.js"; // Import User model for matching
 import Application from "../models/Application.js"; // ✅ Import Application model
+import { getAIJobMatches } from "../utils/aiService.js"; // 🎯 Import AI matching
 
-// Helper function to calculate job match score
+// Helper function to calculate job match score (fallback when AI is unavailable)
 const calculateJobMatchScore = (candidateProfile, job) => {
   let score = 0;
   let maxScore = 100;
@@ -326,11 +327,11 @@ export const deleteJob = async (req, res) => {
     }
 };
 
-// ✅ NEW: Get recommended jobs for candidate based on their profile
+// ✅ NEW: Get recommended jobs for candidate based on their profile (AI-Powered)
 export const getRecommendedJobs = async (req, res) => {
     try {
         const candidateId = req.user.id;
-        const minMatchScore = 60; // Minimum match score to be considered recommended
+        const minMatchScore = 40; // Minimum match score to be considered recommended
         
         // Get candidate profile
         const candidate = await User.findById(candidateId);
@@ -349,38 +350,136 @@ export const getRecommendedJobs = async (req, res) => {
         // Get all available jobs
         const allJobs = await Job.find().populate("recruiter", "name email");
         
-        // Calculate match scores for each job
-        const jobsWithScores = allJobs.map(job => {
-            const matchScore = calculateJobMatchScore(candidate, job);
-            return {
-                ...job.toObject(),
-                matchScore,
-                matchingSkills: (candidate.skills || []).filter(skill => 
+        if (allJobs.length === 0) {
+            return res.json({
+                message: "No jobs available at the moment",
+                recommendedJobs: []
+            });
+        }
+
+        console.log(`🎯 Getting AI recommendations for candidate: ${candidate.name}`);
+        console.log(`📊 Candidate skills: ${candidate.skills?.join(', ')}`);
+        console.log(`📊 Candidate tools: ${candidate.tools?.join(', ')}`);
+        console.log(`📊 Candidate frameworks: ${candidate.frameworks?.join(', ')}`);
+        
+        // Try AI-powered matching first
+        let recommendedJobs = [];
+        let useAI = true;
+        
+        try {
+            const candidateProfile = {
+                skills: candidate.skills || [],
+                tools: candidate.tools || [],
+                frameworks: candidate.frameworks || [],
+                experience: candidate.experience || {},
+                profileSummary: candidate.profileSummary || '',
+                aiProfileInsights: candidate.aiProfileInsights || {}
+            };
+            
+            // Convert jobs to plain objects for AI service
+            const jobsForAI = allJobs.map(job => ({
+                _id: job._id.toString(),
+                title: job.title,
+                description: job.description,
+                requiredSkills: job.requiredSkills || [],
+                requiredYears: job.requiredYears || 0
+            }));
+            
+            const aiResult = await getAIJobMatches(candidateProfile, jobsForAI);
+            
+            if (aiResult.status === 'success' && aiResult.matchedJobs?.length > 0) {
+                console.log(`✅ AI matched ${aiResult.matchedJobs.length} jobs`);
+                
+                // Map AI results back to full job objects
+                recommendedJobs = aiResult.matchedJobs
+                    .filter(match => match.matchScore >= minMatchScore)
+                    .map(match => {
+                        const fullJob = allJobs.find(j => j._id.toString() === match.jobId);
+                        if (!fullJob) return null;
+                        
+                        return {
+                            ...fullJob.toObject(),
+                            matchScore: match.matchScore,
+                            matchingSkills: match.matchingSkills || [],
+                            missingSkills: match.missingSkills || [],
+                            aiRecommendation: match.recommendation || '',
+                            experienceMatch: {
+                                candidateYears: candidate.experience?.totalYears || 0,
+                                requiredYears: fullJob.requiredYears || 0,
+                                meets: match.experienceMatch
+                            }
+                        };
+                    })
+                    .filter(job => job !== null)
+                    .slice(0, 10); // Limit to top 10
+            } else {
+                console.log("⚠️ AI matching returned no results, falling back to basic matching");
+                useAI = false;
+            }
+        } catch (aiError) {
+            console.error("❌ AI matching failed, using fallback:", aiError.message);
+            useAI = false;
+        }
+        
+        // Fallback to basic matching if AI fails
+        if (!useAI || recommendedJobs.length === 0) {
+            console.log("📊 Using basic skill matching...");
+            
+            const jobsWithScores = allJobs.map(job => {
+                const matchScore = calculateJobMatchScore(candidate, job);
+                
+                // Find matching skills (case-insensitive, partial match)
+                const matchingSkills = (candidate.skills || []).filter(skill => 
                     (job.requiredSkills || []).some(required => 
                         skill.toLowerCase().includes(required.toLowerCase()) || 
                         required.toLowerCase().includes(skill.toLowerCase())
                     )
-                ),
-                experienceMatch: {
-                    candidateYears: candidate.experience?.totalYears || 0,
-                    requiredYears: job.requiredYears || 0,
-                    meets: (candidate.experience?.totalYears || 0) >= (job.requiredYears || 0)
-                }
-            };
-        });
+                );
+                
+                // Also check tools and frameworks
+                const matchingTools = (candidate.tools || []).filter(tool =>
+                    (job.requiredSkills || []).some(required =>
+                        tool.toLowerCase().includes(required.toLowerCase()) ||
+                        required.toLowerCase().includes(tool.toLowerCase())
+                    )
+                );
+                
+                const matchingFrameworks = (candidate.frameworks || []).filter(fw =>
+                    (job.requiredSkills || []).some(required =>
+                        fw.toLowerCase().includes(required.toLowerCase()) ||
+                        required.toLowerCase().includes(fw.toLowerCase())
+                    )
+                );
+                
+                const allMatchingSkills = [...new Set([...matchingSkills, ...matchingTools, ...matchingFrameworks])];
+                
+                return {
+                    ...job.toObject(),
+                    matchScore,
+                    matchingSkills: allMatchingSkills,
+                    experienceMatch: {
+                        candidateYears: candidate.experience?.totalYears || 0,
+                        requiredYears: job.requiredYears || 0,
+                        meets: (candidate.experience?.totalYears || 0) >= (job.requiredYears || 0)
+                    }
+                };
+            });
 
-        // Filter jobs with minimum match score and sort by match score
-        const recommendedJobs = jobsWithScores
-            .filter(job => job.matchScore >= minMatchScore)
-            .sort((a, b) => b.matchScore - a.matchScore)
-            .slice(0, 10); // Limit to top 10 recommendations
+            recommendedJobs = jobsWithScores
+                .filter(job => job.matchScore >= minMatchScore)
+                .sort((a, b) => b.matchScore - a.matchScore)
+                .slice(0, 10);
+        }
 
         res.json({
             totalAvailableJobs: allJobs.length,
             recommendedJobsCount: recommendedJobs.length,
             recommendedJobs,
+            matchingMethod: useAI ? 'AI-Powered (Gemini)' : 'Basic Matching',
             candidateProfile: {
                 skills: candidate.skills,
+                tools: candidate.tools || [],
+                frameworks: candidate.frameworks || [],
                 experienceYears: candidate.experience?.totalYears || 0,
                 profileComplete: candidate.profileComplete
             }
