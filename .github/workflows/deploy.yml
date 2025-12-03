@@ -92,6 +92,19 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # 1. Setup Swap Space (Fix for Error 137 - Out of Memory)
+            if [ $(swapon --show | wc -l) -eq 0 ]; then
+              echo "Creating 2GB Swap file..."
+              sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              echo "Swap created successfully."
+            else
+              echo "Swap already exists."
+            fi
+
             cd recruitment-ai-system
             git pull origin main
 

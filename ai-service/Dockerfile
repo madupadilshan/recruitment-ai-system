@@ -27,5 +27,5 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=8000
 
-# Run app.py using gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+# Run app.py using gunicorn with low memory config
+CMD ["gunicorn", "--workers=1", "--threads=2", "--timeout=120", "--bind", "0.0.0.0:8000", "app:app"]
