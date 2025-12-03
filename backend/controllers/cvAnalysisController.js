@@ -8,7 +8,8 @@ import {
   assessCVQuality,
   extractCvText,
   getAiSummary,
-  chatWithCv
+  chatWithCv,
+  comprehensiveCvAnalysis
 } from "../utils/aiService.js";
 import User from "../models/User.js";
 import path from "path";
@@ -414,6 +415,83 @@ export const getAnalysisHistory = async (req, res) => {
     console.error("❌ Get Analysis History Error:", err.message);
     res.status(500).json({
       error: "Failed to get analysis history",
+      details: err.message
+    });
+  }
+};
+
+// 🎯 NEW: Gemini-Powered Comprehensive CV Analysis
+export const geminiComprehensiveAnalysis = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    console.log("🎯 Starting Gemini-powered comprehensive CV analysis for user:", userId);
+
+    if (!req.file) {
+      console.log("❌ No file uploaded");
+      return res.status(400).json({
+        success: false,
+        error: "CV file is required"
+      });
+    }
+
+    // Construct the Docker-compatible path
+    const filename = req.file.filename;
+    const dockerFilePath = `/app/uploads/${filename}`;
+
+    console.log(`📄 Processing file: ${dockerFilePath}`);
+
+    // Call Gemini AI for comprehensive analysis
+    const analysisResult = await comprehensiveCvAnalysis(dockerFilePath);
+
+    if (analysisResult.status === "error") {
+      console.error("❌ Gemini analysis failed:", analysisResult.message);
+      return res.status(500).json({
+        success: false,
+        error: analysisResult.message || "AI analysis failed"
+      });
+    }
+
+    // Update user profile with the analysis data
+    try {
+      const user = await User.findById(userId);
+      if (user && analysisResult.data) {
+        const data = analysisResult.data;
+        
+        // Update skills
+        user.skills = data.skills?.technical || [];
+        user.softSkills = data.skills?.soft || [];
+        user.languages = data.skills?.languages || [];
+        
+        // Update experience
+        if (!user.experience) user.experience = {};
+        user.experience.totalYears = data.experience?.totalYears || 0;
+        user.experience.lastValidated = new Date();
+        
+        // Update quality scores
+        user.cvQualityScore = data.cvQuality?.overallScore || 0;
+        user.atsCompatibility = data.cvQuality?.atsCompatibility || 0;
+        user.impactScore = data.achievements?.impactScore || 0;
+        
+        await user.save();
+        console.log("✅ User profile updated with Gemini analysis");
+      }
+    } catch (updateError) {
+      console.error("⚠️ User profile update failed:", updateError.message);
+    }
+
+    console.log("✅ Sending Gemini comprehensive analysis response");
+    res.json({
+      success: true,
+      data: analysisResult.data,
+      message: "Gemini AI comprehensive analysis completed successfully"
+    });
+
+  } catch (err) {
+    console.error("❌ Gemini Comprehensive Analysis Error:", err.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to perform Gemini comprehensive analysis",
       details: err.message
     });
   }

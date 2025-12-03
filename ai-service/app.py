@@ -102,7 +102,7 @@ def test_gemini():
     try:
         if not GEMINI_API_KEY:
             return jsonify({"error": "GEMINI_API_KEY not configured"}), 500
-        
+
         # Try to generate simple content
         response = generate_content_safe("Say 'Hello, Gemini is working!' in exactly 5 words.")
         return jsonify({
@@ -300,6 +300,135 @@ def ai_chat():
         response = generate_content_safe(prompt)
         return jsonify({"status": "success", "answer": response.text})
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/analyze-cv-comprehensive', methods=['POST'])
+def analyze_cv_comprehensive():
+    """
+    Comprehensive CV analysis for candidates using Gemini AI.
+    Analyzes skills, experience, achievements, and provides improvement suggestions.
+    """
+    try:
+        data = request.get_json()
+        file_path = data.get('file_path')
+        cv_text = data.get('cv_text', '')
+
+        logger.info(f"🎯 Comprehensive CV Analysis requested")
+
+        # Get CV text from file if not provided directly
+        if not cv_text and file_path:
+            cv_text = extract_text_from_pdf(file_path)
+
+        if not cv_text:
+            logger.error("Could not retrieve CV text for comprehensive analysis")
+            return jsonify({"error": "Could not retrieve CV text"}), 400
+
+        logger.info(f"📄 CV text length: {len(cv_text)}")
+
+        # Comprehensive analysis prompt
+        prompt = f"""
+        You are an expert CV Analyst and Career Coach. Perform a comprehensive analysis of the following CV.
+        
+        CV TEXT:
+        {cv_text[:15000]}
+        
+        Analyze the CV thoroughly and return a JSON object with the following structure:
+        {{
+            "personalInfo": {{
+                "name": "Extracted name or 'Not Found'",
+                "email": "Extracted email or 'Not Found'",
+                "phone": "Extracted phone or 'Not Found'",
+                "location": "Extracted location or 'Not Found'",
+                "linkedIn": "Extracted LinkedIn URL or 'Not Found'"
+            }},
+            "professionalSummary": "A 2-3 sentence professional summary based on the CV",
+            "skills": {{
+                "technical": ["list of technical skills found"],
+                "soft": ["list of soft skills found"],
+                "tools": ["list of tools/software found"],
+                "languages": ["programming or human languages found"]
+            }},
+            "experience": {{
+                "totalYears": <estimated years of experience as number>,
+                "level": "Junior/Mid-Level/Senior/Lead/Executive",
+                "positions": [
+                    {{
+                        "title": "Job Title",
+                        "company": "Company Name",
+                        "duration": "Duration",
+                        "highlights": ["key achievement 1", "key achievement 2"]
+                    }}
+                ]
+            }},
+            "education": [
+                {{
+                    "degree": "Degree name",
+                    "field": "Field of study",
+                    "institution": "Institution name",
+                    "year": "Year or 'Not specified'"
+                }}
+            ],
+            "achievements": {{
+                "quantified": ["achievements with numbers/metrics"],
+                "leadership": ["leadership achievements"],
+                "technical": ["technical achievements"],
+                "impactScore": <number 0-100 based on achievement quality>
+            }},
+            "cvQuality": {{
+                "overallScore": <number 0-100>,
+                "formatting": <number 0-100>,
+                "completeness": <number 0-100>,
+                "atsCompatibility": <number 0-100>,
+                "strengths": ["list of CV strengths"],
+                "improvements": ["list of areas to improve"],
+                "criticalIssues": ["any critical issues found"]
+            }},
+            "careerInsights": {{
+                "currentLevel": "Current career level assessment",
+                "potentialRoles": ["suitable job roles"],
+                "industryFit": ["industries this CV is suited for"],
+                "salaryRange": "Estimated salary range based on experience",
+                "growthAreas": ["skills/areas to develop for career growth"]
+            }},
+            "aiRecommendations": {{
+                "immediateActions": ["things to fix immediately"],
+                "shortTermGoals": ["goals for next 3-6 months"],
+                "longTermGoals": ["goals for next 1-2 years"],
+                "skillsToLearn": ["recommended skills to acquire"],
+                "certifications": ["recommended certifications"]
+            }}
+        }}
+        
+        Be thorough but realistic in your assessment. Provide actionable feedback.
+        """
+
+        # Call AI
+        response = generate_content_safe(prompt)
+        
+        # Force garbage collection
+        gc.collect()
+
+        # Parse Response
+        try:
+            cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
+            result = json.loads(cleaned_response)
+            
+            logger.info("✅ Comprehensive CV analysis completed successfully")
+            return jsonify({
+                "status": "success",
+                "data": result
+            })
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse AI response JSON: {e}")
+            # Return raw text if JSON parsing fails
+            return jsonify({
+                "status": "partial",
+                "error": "AI response parsing failed",
+                "raw": response.text[:2000]
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Comprehensive CV Analysis Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

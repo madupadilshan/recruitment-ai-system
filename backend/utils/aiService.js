@@ -83,6 +83,25 @@ export const chatWithCv = async (cvText, question) => {
   }
 };
 
+// 🎯 NEW: Comprehensive CV Analysis using Gemini AI
+export const comprehensiveCvAnalysis = async (filePath) => {
+  try {
+    console.log(`🎯 Requesting comprehensive AI analysis for: ${filePath}`);
+    const res = await axios.post(`${AI_BASE_URL}/analyze-cv-comprehensive`, {
+      file_path: filePath,
+    }, { timeout: 180000 }); // 3 minutes timeout for comprehensive analysis
+
+    console.log("✅ Comprehensive AI Analysis successful");
+    return res.data;
+  } catch (err) {
+    console.error("❌ Comprehensive AI Analysis Error:", err.message);
+    if (err.response) {
+      console.error("🔴 AI Service Response:", JSON.stringify(err.response.data));
+    }
+    return { status: "error", message: "Comprehensive analysis failed", error: err.message };
+  }
+};
+
 // === ADVANCED CV PROCESSING FUNCTIONS ===
 
 // 🚀 Enhanced Skill Extraction with Real CV Analysis

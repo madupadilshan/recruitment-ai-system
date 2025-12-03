@@ -30,7 +30,7 @@ router.post("/upload", upload.single("cvFile"), async (req, res) => {
     console.log(`📁 Original file path: ${req.file.path}`);
 
     const analysisResult = await getAnalysisFromFile(dockerFilePath, job);
-    
+
     // Log the analysis result for debugging
     console.log(`📊 Analysis Result:`, JSON.stringify(analysisResult).slice(0, 200));
 

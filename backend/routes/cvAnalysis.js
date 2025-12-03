@@ -12,7 +12,8 @@ import {
   comprehensiveAnalysis,
   getAnalysisHistory,
   generateSummary,
-  chatWithAi
+  chatWithAi,
+  geminiComprehensiveAnalysis
 } from '../controllers/cvAnalysisController.js';
 
 const router = express.Router();
@@ -59,6 +60,9 @@ router.post('/quality/assess', authMiddleware, assessQuality);
 
 // 🎯 Comprehensive Analysis (file upload)
 router.post('/comprehensive', authMiddleware, upload.single("cvFile"), comprehensiveAnalysis);
+
+// 🤖 NEW: Gemini AI Comprehensive Analysis (Real AI-powered)
+router.post('/gemini-analyze', authMiddleware, upload.single("cvFile"), geminiComprehensiveAnalysis);
 
 // 🧪 Test comprehensive analysis without file upload
 router.post('/comprehensive-test', authMiddleware, (req, res) => {
