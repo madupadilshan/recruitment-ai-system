@@ -161,6 +161,7 @@ const CVAnalysis = () => {
   const ExperienceSection = ({ experience }) => {
     // Support both Gemini and basic format
     const totalExp = experience?.totalYears || experience?.totalExperience || 0;
+    const statedExp = experience?.statedExperience || null;
     const level = experience?.level || 'Not specified';
     const positions = experience?.positions || experience?.experienceByRole || [];
     const verificationScore = experience?.verificationScore || 0;
@@ -169,9 +170,18 @@ const CVAnalysis = () => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h3 className="text-xl font-bold text-gray-900 mb-4">🔍 Experience Analysis</h3>
         
+        {/* Stated Experience Banner */}
+        {statedExp && statedExp !== 'Not mentioned' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="text-blue-800 font-medium">
+              📌 CV-இல் குறிப்பிடப்பட்டுள்ளது: <span className="font-bold">{statedExp}</span>
+            </p>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">{totalExp}</div>
+            <div className="text-3xl font-bold text-blue-600">{totalExp}+</div>
             <div className="text-gray-600">Years Experience</div>
           </div>
           

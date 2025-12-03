@@ -349,7 +349,8 @@ def analyze_cv_comprehensive():
                 "languages": ["programming or human languages found"]
             }},
             "experience": {{
-                "totalYears": <estimated years of experience as number>,
+                "totalYears": <IMPORTANT: First look for explicitly stated experience like "15+ years", "10 years of experience" etc. in the CV text. Use that number if found. Only calculate from positions if not explicitly mentioned>,
+                "statedExperience": "The exact experience phrase found in CV like '15+ years of experience' or 'Not mentioned'",
                 "level": "Junior/Mid-Level/Senior/Lead/Executive",
                 "positions": [
                     {{
