@@ -95,8 +95,13 @@ jobs:
             cd recruitment-ai-system
             git pull origin main
 
+            # Create .env file with secrets
+            echo "MONGO_URI=${{ secrets.MONGO_URI }}" > .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+
             # Pull new images
-            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             docker-compose -f docker-compose.prod.yml pull
 
             # Restart containers with new images

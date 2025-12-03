@@ -79,8 +79,8 @@ export const chatWithCv = async (cvText, question) => {
 // 🚀 Enhanced Skill Extraction with Real CV Analysis
 export const extractAdvancedSkills = async (cvText, language = 'english') => {
   try {
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Processing started
+
 
     console.log("🔍 Analyzing skills from CV text (length:", cvText.length, ")");
 
@@ -455,8 +455,8 @@ export const validateExperience = async (cvText, linkedInProfile = null) => {
 // 🏆 Achievement Quantification and Scoring (Real CV Analysis)
 export const quantifyAchievements = async (cvText, jobRole = null) => {
   try {
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 900));
+    // Processing started
+
 
     console.log("🏆 Analyzing achievements from CV text");
 
@@ -675,8 +675,7 @@ export const processMultiLanguageCV = async (filePath, detectedLanguage = null) 
 // 📊 Comprehensive CV Quality Assessment (Real CV Analysis)
 export const assessCVQuality = async (cvText, targetJob = null) => {
   try {
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1100));
+    // Processing started
 
     console.log("📊 Analyzing CV quality from actual content");
 

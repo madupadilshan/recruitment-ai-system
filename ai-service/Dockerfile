@@ -27,5 +27,5 @@ ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=8000
 
-# Run app.py when the container launches
-CMD ["flask", "run"]
+# Run app.py using gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
