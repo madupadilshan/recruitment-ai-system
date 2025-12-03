@@ -62,7 +62,7 @@ function Dashboard() {
           const recommendedJobsData = res.data.recommendedJobs || res.data;
           setRecommended(recommendedJobsData);
           setRecommendedJobs(recommendedJobsData.length);
-          
+
           if (recommendedJobsData.length === 0 && res.data.message) {
             console.log("ℹ️  Recommendation message:", res.data.message);
           }
@@ -78,7 +78,7 @@ function Dashboard() {
       api.get("/applications/count/by-recruiter").then((res) => {
           setTotalApplicants(res.data.count);
       }).catch(() => setTotalApplicants(0));
-      
+
       api.get("/applications/count/matches-today").then((res) => {
           setAiMatches(res.data.count);
       }).catch(() => setAiMatches(0));
@@ -111,25 +111,25 @@ function Dashboard() {
   const handleAdvancedSearch = async (filters) => {
     setSearchLoading(true);
     setIsSearchActive(true);
-    
+
     try {
       // Build query parameters
       const queryParams = new URLSearchParams();
-      
+
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== '' && value !== false && value !== null) {
           queryParams.append(key, value);
         }
       });
-      
+
       console.log("🔍 Advanced search with filters:", filters);
       const response = await api.get(`/jobs/search?${queryParams.toString()}`);
-      
+
       setSearchResults(response.data.jobs);
       setSearchPagination(response.data.pagination);
-      
+
       console.log("✅ Search results:", response.data);
-      
+
     } catch (err) {
       console.error("❌ Search error:", err);
       setSearchResults([]);
@@ -147,15 +147,15 @@ function Dashboard() {
   };
 
   // Determine which jobs to show
-  const jobsToShow = isSearchActive 
-    ? searchResults 
+  const jobsToShow = isSearchActive
+    ? searchResults
     : (user?.role === "candidate" && showRecommended ? recommended : jobs);
 
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       {/* CV Upload Modal for new candidates */}
-      <ProfileSetupModal 
-        isOpen={showProfileSetup} 
+      <ProfileSetupModal
+        isOpen={showProfileSetup}
         onClose={() => setShowProfileSetup(false)}
         onComplete={handleProfileSetupComplete}
       />
@@ -163,7 +163,7 @@ function Dashboard() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Welcome, {profile ? profile.name : '...'}!</h1>
         {profile && (<p className="mt-1 text-gray-500 capitalize text-md">Role: {profile.role}</p>)}
-        
+
         {/* CV Upload Reminder for candidates without complete profiles */}
         {profile && profile.role === "candidate" && !profile.cvUploaded && (
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -179,8 +179,8 @@ function Dashboard() {
                   <p className="text-sm text-blue-600">Get personalized job recommendations and automatic profile completion</p>
                 </div>
               </div>
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 rounded-md hover:bg-blue-50"
               >
                 Upload CV
@@ -191,7 +191,7 @@ function Dashboard() {
       </div>
 
       {/* ✅ NEW: Advanced Search Component */}
-      <AdvancedSearch 
+      <AdvancedSearch
         onSearch={handleAdvancedSearch}
         onReset={handleResetSearch}
       />
@@ -201,7 +201,7 @@ function Dashboard() {
           <p className="text-lg font-semibold text-gray-700">{jobs.length}</p>
           <p className="text-sm text-gray-500">{user?.role === "recruiter" ? "Jobs Posted" : "Total Jobs"}</p>
         </div>
-        <div 
+        <div
           className="p-4 text-center bg-white shadow cursor-pointer rounded-xl hover:bg-gray-100"
           onClick={() => {
             if (user?.role === "candidate") {
@@ -220,14 +220,14 @@ function Dashboard() {
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">
-          {isSearchActive 
-            ? `🔍 Search Results (${searchResults.length} jobs)` 
-            : showRecommended 
-              ? "🌟 Recommended For You" 
+          {isSearchActive
+            ? `🔍 Search Results (${searchResults.length} jobs)`
+            : showRecommended
+              ? "🌟 Recommended For You"
               : (user?.role === 'recruiter' ? "📂 My Posted Jobs" : "📂 All Available Jobs")
           }
         </h2>
-        
+
         {/* Search Results Info */}
         {isSearchActive && searchPagination && (
           <div className="text-sm text-gray-600">
@@ -236,11 +236,11 @@ function Dashboard() {
           </div>
         )}
       </div>
-      
+
       {user?.role === "candidate" && showRecommended && !isSearchActive && (
         <div className="mb-4">
-          <button 
-            className="text-sm font-medium text-blue-600 hover:text-blue-800" 
+          <button
+            className="text-sm font-medium text-blue-600 hover:text-blue-800"
             onClick={() => setShowRecommended(false)}
           >
             ← Back to All Jobs
@@ -251,8 +251,8 @@ function Dashboard() {
       {/* Back to normal jobs from search */}
       {isSearchActive && (
         <div className="mb-4">
-          <button 
-            className="text-sm font-medium text-blue-600 hover:text-blue-800" 
+          <button
+            className="text-sm font-medium text-blue-600 hover:text-blue-800"
             onClick={handleResetSearch}
           >
             ← Back to All Jobs
@@ -267,7 +267,7 @@ function Dashboard() {
             {searchLoading ? "Searching jobs..." : "Loading jobs..."}
           </p>
         </div>
-      ) : 
+      ) :
       jobsToShow.length === 0 ? (
         <div className="mt-8 text-center">
           {isSearchActive ? (
@@ -281,7 +281,7 @@ function Dashboard() {
                 <li>Expanding your location or salary range</li>
                 <li>Removing some filters to broaden your search</li>
               </ul>
-              <button 
+              <button
                 className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                 onClick={handleResetSearch}
               >
@@ -299,7 +299,7 @@ function Dashboard() {
                 <li>No current job openings match your skillset</li>
                 <li>Try updating your skills or experience</li>
               </ul>
-              <button 
+              <button
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 onClick={() => setShowRecommended(false)}
               >
@@ -315,8 +315,8 @@ function Dashboard() {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {jobsToShow.map((job) => (
-            <div 
-              key={job._id} 
+            <div
+              key={job._id}
               className="flex flex-col h-full p-5 transition bg-white border shadow-lg hover:shadow-xl rounded-2xl relative"
             >
               {/* Match Score Badge for Recommended Jobs */}
@@ -336,7 +336,7 @@ function Dashboard() {
                 <h3 className="text-xl font-bold text-gray-800 pr-16">{job.title}</h3>
                 <p className="flex-grow mt-1 text-gray-600 line-clamp-3">{job.description}</p>
                 <p className="mt-2 text-sm text-gray-400">Posted by: {job.recruiter?.name}</p>
-                
+
                 {/* Show matching skills for recommended jobs */}
                 {showRecommended && job.matchingSkills && job.matchingSkills.length > 0 && (
                   <div className="mt-3">
@@ -355,7 +355,7 @@ function Dashboard() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Show missing skills (AI recommendation) */}
                 {showRecommended && job.missingSkills && job.missingSkills.length > 0 && (
                   <div className="mt-2">
@@ -369,7 +369,7 @@ function Dashboard() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* AI Recommendation text */}
                 {showRecommended && job.aiRecommendation && (
                   <div className="mt-2 p-2 bg-blue-50 rounded-lg">
@@ -390,7 +390,7 @@ function Dashboard() {
                   </div>
                 )}
               </div>
-              
+
               {user?.role === "recruiter" && (
                 <div className="flex items-center justify-between pt-4 mt-4 border-t">
                   <button type="button" className="font-medium text-blue-600" onClick={(e) => { e.stopPropagation(); navigate(`/applicants/${job._id}`); }}>

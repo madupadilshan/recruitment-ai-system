@@ -13,11 +13,11 @@ const calculateJobMatchScore = (candidateProfile, job) => {
   // Skills matching (60% weight)
   const candidateSkills = candidateProfile.skills || [];
   const requiredSkills = job.requiredSkills || [];
-  
+
   if (requiredSkills.length > 0) {
-    const matchingSkills = candidateSkills.filter(skill => 
-      requiredSkills.some(required => 
-        skill.toLowerCase().includes(required.toLowerCase()) || 
+    const matchingSkills = candidateSkills.filter(skill =>
+      requiredSkills.some(required =>
+        skill.toLowerCase().includes(required.toLowerCase()) ||
         required.toLowerCase().includes(skill.toLowerCase())
       )
     );
@@ -30,7 +30,7 @@ const calculateJobMatchScore = (candidateProfile, job) => {
   // Experience matching (40% weight)
   const candidateYears = candidateProfile.experience?.totalYears || 0;
   const requiredYears = job.requiredYears || 0;
-  
+
   if (requiredYears > 0) {
     if (candidateYears >= requiredYears) {
       score += 40; // Full points if meets or exceeds requirement
@@ -49,29 +49,29 @@ const calculateJobMatchScore = (candidateProfile, job) => {
 export const createJob = async (req, res) => {
   try {
     const { title, description, recruiterId, requiredSkills, requiredYears } = req.body;
-    const job = new Job({ 
-      title, 
-      description, 
+    const job = new Job({
+      title,
+      description,
       recruiter: recruiterId,
       requiredSkills,
       requiredYears
     });
     await job.save();
-    
+
     // ✅ NEW: Emit "new job posted" notification to all candidates
     if (global.io) {
       console.log("🔔 Starting notification process for new job:", title);
-      
+
       // Find all candidates with matching skills
       const candidates = await User.find({ role: "candidate" });
       console.log(`📊 Found ${candidates.length} total candidates`);
-      
+
       const matchingCandidates = [];
-      
+
       for (const candidate of candidates) {
         const matchScore = calculateJobMatchScore(candidate, job);
         console.log(`🎯 Candidate ${candidate.name}: Match score ${matchScore}%`);
-        
+
         if (matchScore >= 60) { // Only notify if good match
           matchingCandidates.push({
             userId: candidate._id,
@@ -79,9 +79,9 @@ export const createJob = async (req, res) => {
           });
         }
       }
-      
+
       console.log(`✅ Found ${matchingCandidates.length} matching candidates (60%+ match)`);
-      
+
       // Emit to all connected candidates
       const notificationData = {
         type: "new_job",
@@ -92,15 +92,15 @@ export const createJob = async (req, res) => {
         timestamp: new Date(),
         matchingCandidates: matchingCandidates.map(c => c.userId)
       };
-      
+
       global.io.emit("new_job_posted", notificationData);
       console.log(`🚀 Emitted new_job_posted notification:`, notificationData);
-      
+
       console.log(`🔔 Notified ${matchingCandidates.length} matching candidates about new job: ${title}`);
     } else {
       console.error("❌ Socket.io not available!");
     }
-    
+
     res.status(201).json(job);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -123,26 +123,26 @@ export const searchJobs = async (req, res) => {
       // Text search
       keyword,
       skills,
-      
+
       // Location filters
       city,
       remote,
       hybrid,
-      
+
       // Salary filters
       minSalary,
       maxSalary,
       currency = "LKR",
-      
+
       // Company filters
       companySize,
       industry,
-      
+
       // Job details
       jobType,
       urgency,
       experienceLevel,
-      
+
       // Sorting & pagination
       sortBy = "createdAt",
       sortOrder = "desc",
@@ -173,11 +173,11 @@ export const searchJobs = async (req, res) => {
     if (city) {
       searchQuery['location.city'] = { $regex: city, $options: 'i' };
     }
-    
+
     if (remote === 'true') {
       searchQuery['location.remote'] = true;
     }
-    
+
     if (hybrid === 'true') {
       searchQuery['location.hybrid'] = true;
     }
@@ -185,7 +185,7 @@ export const searchJobs = async (req, res) => {
     // Salary filters
     if (minSalary || maxSalary) {
       searchQuery['salary.currency'] = currency;
-      
+
       if (minSalary && maxSalary) {
         searchQuery.$and = [
           { 'salary.min': { $gte: parseInt(minSalary) } },
@@ -202,7 +202,7 @@ export const searchJobs = async (req, res) => {
     if (companySize) {
       searchQuery['company.size'] = companySize;
     }
-    
+
     if (industry) {
       searchQuery['company.industry'] = { $regex: industry, $options: 'i' };
     }
@@ -318,7 +318,7 @@ export const deleteJob = async (req, res) => {
 
         // Also delete all applications associated with this job
         await Application.deleteMany({ job: id });
-        
+
         await Job.findByIdAndDelete(id);
 
         res.json({ message: "Job and associated applications deleted successfully" });
@@ -332,7 +332,7 @@ export const getRecommendedJobs = async (req, res) => {
     try {
         const candidateId = req.user.id;
         const minMatchScore = 40; // Minimum match score to be considered recommended
-        
+
         // Get candidate profile
         const candidate = await User.findById(candidateId);
         if (!candidate || candidate.role !== 'candidate') {
@@ -349,7 +349,7 @@ export const getRecommendedJobs = async (req, res) => {
 
         // Get all available jobs
         const allJobs = await Job.find().populate("recruiter", "name email");
-        
+
         if (allJobs.length === 0) {
             return res.json({
                 message: "No jobs available at the moment",
@@ -361,11 +361,11 @@ export const getRecommendedJobs = async (req, res) => {
         console.log(`📊 Candidate skills: ${candidate.skills?.join(', ')}`);
         console.log(`📊 Candidate tools: ${candidate.tools?.join(', ')}`);
         console.log(`📊 Candidate frameworks: ${candidate.frameworks?.join(', ')}`);
-        
+
         // Try AI-powered matching first
         let recommendedJobs = [];
         let useAI = true;
-        
+
         try {
             const candidateProfile = {
                 skills: candidate.skills || [],
@@ -375,7 +375,7 @@ export const getRecommendedJobs = async (req, res) => {
                 profileSummary: candidate.profileSummary || '',
                 aiProfileInsights: candidate.aiProfileInsights || {}
             };
-            
+
             // Convert jobs to plain objects for AI service
             const jobsForAI = allJobs.map(job => ({
                 _id: job._id.toString(),
@@ -384,19 +384,19 @@ export const getRecommendedJobs = async (req, res) => {
                 requiredSkills: job.requiredSkills || [],
                 requiredYears: job.requiredYears || 0
             }));
-            
+
             const aiResult = await getAIJobMatches(candidateProfile, jobsForAI);
-            
+
             if (aiResult.status === 'success' && aiResult.matchedJobs?.length > 0) {
                 console.log(`✅ AI matched ${aiResult.matchedJobs.length} jobs`);
-                
+
                 // Map AI results back to full job objects
                 recommendedJobs = aiResult.matchedJobs
                     .filter(match => match.matchScore >= minMatchScore)
                     .map(match => {
                         const fullJob = allJobs.find(j => j._id.toString() === match.jobId);
                         if (!fullJob) return null;
-                        
+
                         return {
                             ...fullJob.toObject(),
                             matchScore: match.matchScore,
@@ -420,22 +420,22 @@ export const getRecommendedJobs = async (req, res) => {
             console.error("❌ AI matching failed, using fallback:", aiError.message);
             useAI = false;
         }
-        
+
         // Fallback to basic matching if AI fails
         if (!useAI || recommendedJobs.length === 0) {
             console.log("📊 Using basic skill matching...");
-            
+
             const jobsWithScores = allJobs.map(job => {
                 const matchScore = calculateJobMatchScore(candidate, job);
-                
+
                 // Find matching skills (case-insensitive, partial match)
-                const matchingSkills = (candidate.skills || []).filter(skill => 
-                    (job.requiredSkills || []).some(required => 
-                        skill.toLowerCase().includes(required.toLowerCase()) || 
+                const matchingSkills = (candidate.skills || []).filter(skill =>
+                    (job.requiredSkills || []).some(required =>
+                        skill.toLowerCase().includes(required.toLowerCase()) ||
                         required.toLowerCase().includes(skill.toLowerCase())
                     )
                 );
-                
+
                 // Also check tools and frameworks
                 const matchingTools = (candidate.tools || []).filter(tool =>
                     (job.requiredSkills || []).some(required =>
@@ -443,16 +443,16 @@ export const getRecommendedJobs = async (req, res) => {
                         required.toLowerCase().includes(tool.toLowerCase())
                     )
                 );
-                
+
                 const matchingFrameworks = (candidate.frameworks || []).filter(fw =>
                     (job.requiredSkills || []).some(required =>
                         fw.toLowerCase().includes(required.toLowerCase()) ||
                         required.toLowerCase().includes(fw.toLowerCase())
                     )
                 );
-                
+
                 const allMatchingSkills = [...new Set([...matchingSkills, ...matchingTools, ...matchingFrameworks])];
-                
+
                 return {
                     ...job.toObject(),
                     matchScore,
@@ -495,30 +495,30 @@ export const getRecommendedJobs = async (req, res) => {
 export const seedTestJobs = async (req, res) => {
     try {
         const { recruiterId } = req.body;
-        
+
         if (!recruiterId) {
             return res.status(400).json({ error: "Recruiter ID is required" });
         }
-        
+
         // Verify recruiter exists
         const recruiter = await User.findById(recruiterId);
         if (!recruiter || recruiter.role !== 'recruiter') {
             return res.status(400).json({ error: "Invalid recruiter ID" });
         }
-        
+
         // Check if test jobs already exist for this recruiter
-        const existingJobs = await Job.find({ 
+        const existingJobs = await Job.find({
             recruiter: recruiterId,
             title: { $regex: /Test|Sample|Demo/i }
         });
-        
+
         if (existingJobs.length > 0) {
-            return res.json({ 
-                message: "Test jobs already exist for this recruiter", 
+            return res.json({
+                message: "Test jobs already exist for this recruiter",
                 jobs: existingJobs.map(j => ({ title: j.title, company: j.company, _id: j._id }))
             });
         }
-        
+
         const testJobs = [
             {
                 title: "Senior Software Engineer",
@@ -599,14 +599,14 @@ export const seedTestJobs = async (req, res) => {
                 applicationDeadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000)
             }
         ];
-        
+
         const createdJobs = await Job.insertMany(testJobs);
-        
+
         res.json({
             message: "Test jobs created successfully",
             jobs: createdJobs.map(j => ({ title: j.title, company: j.company, _id: j._id }))
         });
-        
+
     } catch (err) {
         console.error("❌ Seed test jobs error:", err.message);
         res.status(500).json({ error: "Server error" });

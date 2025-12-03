@@ -4,20 +4,35 @@ services:
   backend:
     build: ./backend
     container_name: backend
+    restart: always
     ports:
       - "5000:5000"
     environment:
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
       - AI_SERVICE_URL=http://ai-service:8000
+      - NODE_OPTIONS=--max-old-space-size=256
     volumes:
       - ./backend/uploads:/app/uploads
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 200M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build: ./frontend
     container_name: frontend
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -32,6 +47,7 @@ services:
   ai-service:
     build: ./ai-service
     container_name: ai-service
+    restart: always
     ports:
       - "8000:8000"
     environment:
@@ -41,6 +57,18 @@ services:
       - ./backend/uploads:/app/uploads
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+        reservations:
+          memory: 150M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
   app-network:

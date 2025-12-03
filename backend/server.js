@@ -43,6 +43,19 @@ app.use("/api", messageRoutes); // ✅ messaging routes
 app.use("/api/interviews", interviewRoutes); // ✅ interview routes
 app.use("/api/cv", cvAnalysisRoutes); // ✅ AI CV analysis routes
 
+// Health check endpoint for Docker
+app.get("/health", (req, res) => {
+  const memUsage = process.memoryUsage();
+  res.json({ 
+    status: "healthy", 
+    uptime: process.uptime(),
+    memory: {
+      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
+      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB',
+      rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB'
+    }
+  });
+});
 
 app.get("/", (req, res) => res.send("API Running..."));
 

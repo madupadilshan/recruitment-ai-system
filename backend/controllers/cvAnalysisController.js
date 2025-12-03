@@ -457,22 +457,22 @@ export const geminiComprehensiveAnalysis = async (req, res) => {
       const user = await User.findById(userId);
       if (user && analysisResult.data) {
         const data = analysisResult.data;
-        
+
         // Update skills
         user.skills = data.skills?.technical || [];
         user.softSkills = data.skills?.soft || [];
         user.languages = data.skills?.languages || [];
-        
+
         // Update experience
         if (!user.experience) user.experience = {};
         user.experience.totalYears = data.experience?.totalYears || 0;
         user.experience.lastValidated = new Date();
-        
+
         // Update quality scores
         user.cvQualityScore = data.cvQuality?.overallScore || 0;
         user.atsCompatibility = data.cvQuality?.atsCompatibility || 0;
         user.impactScore = data.achievements?.impactScore || 0;
-        
+
         await user.save();
         console.log("✅ User profile updated with Gemini analysis");
       }

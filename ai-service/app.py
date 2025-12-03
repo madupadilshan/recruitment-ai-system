@@ -328,10 +328,10 @@ def analyze_cv_comprehensive():
         # Comprehensive analysis prompt
         prompt = f"""
         You are an expert CV Analyst and Career Coach. Perform a comprehensive analysis of the following CV.
-        
+
         CV TEXT:
         {cv_text[:15000]}
-        
+
         Analyze the CV thoroughly and return a JSON object with the following structure:
         {{
             "personalInfo": {{
@@ -399,13 +399,13 @@ def analyze_cv_comprehensive():
                 "certifications": ["recommended certifications"]
             }}
         }}
-        
+
         Be thorough but realistic in your assessment. Provide actionable feedback.
         """
 
         # Call AI
         response = generate_content_safe(prompt)
-        
+
         # Force garbage collection
         gc.collect()
 
@@ -413,7 +413,7 @@ def analyze_cv_comprehensive():
         try:
             cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
             result = json.loads(cleaned_response)
-            
+
             logger.info("✅ Comprehensive CV analysis completed successfully")
             return jsonify({
                 "status": "success",
@@ -440,26 +440,26 @@ def match_jobs():
         data = request.get_json()
         candidate_profile = data.get('candidateProfile', {})
         jobs = data.get('jobs', [])
-        
+
         if not candidate_profile or not jobs:
             return jsonify({"error": "Missing candidateProfile or jobs"}), 400
-        
+
         logger.info(f"🎯 AI Job Matching: {len(jobs)} jobs for candidate")
-        
+
         # Prepare candidate info for prompt
         candidate_skills = candidate_profile.get('skills', [])
         candidate_experience = candidate_profile.get('experience', {})
         candidate_tools = candidate_profile.get('tools', [])
         candidate_frameworks = candidate_profile.get('frameworks', [])
         candidate_summary = candidate_profile.get('profileSummary', '')
-        
+
         # Combine all skills
         all_candidate_skills = list(set(
-            candidate_skills + 
-            candidate_tools + 
+            candidate_skills +
+            candidate_tools +
             candidate_frameworks
         ))
-        
+
         # Prepare jobs info for prompt
         jobs_info = []
         for job in jobs[:20]:  # Limit to 20 jobs to avoid token limits
@@ -470,19 +470,19 @@ def match_jobs():
                 "requiredSkills": job.get('requiredSkills', []),
                 "requiredYears": job.get('requiredYears', 0)
             })
-        
+
         prompt = f"""
         You are an expert AI recruitment matcher. Analyze the candidate profile and match with available jobs.
-        
+
         CANDIDATE PROFILE:
         - Skills: {', '.join(all_candidate_skills[:30])}
         - Experience: {candidate_experience.get('totalYears', 0)} years
         - Experience Level: {candidate_experience.get('level', 'Not specified')}
         - Summary: {candidate_summary[:300]}
-        
+
         AVAILABLE JOBS:
         {json.dumps(jobs_info, indent=2)}
-        
+
         For each job, calculate a match score and identify matching skills.
         Consider these matching rules:
         1. "JavaScript" should match with "JS", "React", "Node.js", "TypeScript"
@@ -491,7 +491,7 @@ def match_jobs():
         4. "AWS" should match with "Cloud", "EC2", "S3", "Lambda"
         5. "SQL" should match with "MySQL", "PostgreSQL", "Oracle", "Database"
         6. Similar skills and related technologies should be matched intelligently
-        
+
         Return a JSON array with this structure:
         [
             {{
@@ -503,18 +503,18 @@ def match_jobs():
                 "recommendation": "Short recommendation why this job is a good/bad match"
             }}
         ]
-        
+
         Only include jobs with matchScore >= 40.
         Sort by matchScore descending.
         """
-        
+
         response = generate_content_safe(prompt)
         gc.collect()
-        
+
         try:
             cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
             result = json.loads(cleaned_response)
-            
+
             logger.info(f"✅ AI matched {len(result)} jobs for candidate")
             return jsonify({
                 "status": "success",
@@ -527,7 +527,7 @@ def match_jobs():
                 "error": "AI response parsing failed",
                 "raw": response.text[:1000]
             }), 500
-            
+
     except Exception as e:
         logger.error(f"AI Job Matching Error: {e}")
         return jsonify({"error": str(e)}), 500
