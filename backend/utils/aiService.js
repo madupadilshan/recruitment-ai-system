@@ -9,18 +9,23 @@ const AI_BASE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:5001";
 // Renamed from getMatchScoreFromFile to be more descriptive
 export const getAnalysisFromFile = async (filePath, job) => {
   try {
+    console.log(`📤 Requesting AI analysis for: ${filePath}`);
     const res = await axios.post(`${AI_BASE_URL}/analyze-cv`, {
       file_path: filePath,
       job_description: job.description,
       required_skills: job.requiredSkills,
       required_years: job.requiredYears,
-    });
+    }, { timeout: 120000 }); // 2 minutes timeout
+    
+    console.log("✅ AI Analysis successful");
     return res.data;
   } catch (err) {
     console.error("❌ AI Analysis Service Error:", err.message);
     if (err.response) {
       console.error("🔴 AI Service Response Data:", JSON.stringify(err.response.data));
       console.error("🔴 AI Service Status:", err.response.status);
+    } else if (err.request) {
+      console.error("🔴 AI Service No Response (Timeout or Network Error)");
     }
     return { error: true, message: "AI analysis failed.", overallScore: 0 };
   }

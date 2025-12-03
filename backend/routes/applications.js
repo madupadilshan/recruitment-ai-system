@@ -21,8 +21,9 @@ router.post("/upload", upload.single("cvFile"), async (req, res) => {
     }
     
     // Construct the absolute path for the Docker container
-    // Both backend and ai-service mount the uploads volume to /app/uploads
-    const dockerFilePath = `/app/uploads/${req.file.filename}`;
+    // Use path.resolve to get the absolute path, ensuring cross-platform compatibility
+    // In Docker, this resolves to /app/uploads/filename
+    const dockerFilePath = path.resolve(req.file.path).replace(/\\/g, '/');
     
     console.log(`📤 Sending file to AI Service: ${dockerFilePath}`);
     

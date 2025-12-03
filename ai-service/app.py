@@ -38,11 +38,19 @@ def get_gemini_model():
         # Fallback to Pro
         return genai.GenerativeModel('gemini-pro')
 
+import gc
+
 def extract_text_from_pdf(file_path):
     """Extracts text from a PDF file safely."""
     try:
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
+            # Debug: List directory contents to help troubleshoot
+            dir_path = os.path.dirname(file_path)
+            if os.path.exists(dir_path):
+                logger.info(f"Contents of {dir_path}: {os.listdir(dir_path)}")
+            else:
+                logger.error(f"Directory {dir_path} does not exist")
             return None
         
         doc = fitz.open(file_path)
@@ -95,12 +103,15 @@ def analyze_cv():
         required_skills = data.get('required_skills', [])
         required_years = data.get('required_years', 0)
         
+        logger.info(f"Analyzing CV: {file_path}")
+        
         # 1. Get CV Text
         cv_text = data.get('cv_text')
         if not cv_text and file_path:
             cv_text = extract_text_from_pdf(file_path)
             
         if not cv_text:
+            logger.error("Could not retrieve CV text")
             return jsonify({"error": "Could not retrieve CV text"}), 400
 
         # 2. Prepare Prompt
@@ -141,6 +152,9 @@ def analyze_cv():
         
         # 3. Call AI
         response = model.generate_content(prompt)
+        
+        # Force garbage collection
+        gc.collect()
         
         # 4. Parse Response
         try:
