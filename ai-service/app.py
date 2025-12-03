@@ -32,23 +32,32 @@ else:
 def generate_content_safe(prompt):
     """Generates content using Gemini with fallback models."""
     # List of models to try in order of preference
-    models = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro']
-    
+    # Updated model names to match current Gemini API
+    models = [
+        'gemini-2.0-flash',      # Newest model
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro-latest',
+        'gemini-1.5-pro',
+        'gemini-pro',
+    ]
+
     last_error = None
-    
+
     for model_name in models:
         try:
             logger.info(f"🤖 Trying AI model: {model_name}")
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
+            logger.info(f"✅ Successfully used model: {model_name}")
             return response
         except Exception as e:
-            logger.warning(f"⚠️ Model {model_name} failed: {e}")
+            logger.warning(f"⚠️ Model {model_name} failed: {str(e)[:100]}")
             last_error = e
             continue
-            
+
     # If all models fail, raise the last error
-    logger.error("❌ All AI models failed.")
+    logger.error(f"❌ All AI models failed. Last error: {last_error}")
     raise last_error
 
 import gc
@@ -78,11 +87,31 @@ def extract_text_from_pdf(file_path):
 
 @app.route('/', methods=['GET'])
 def health_check():
+    # Check if API key is configured
+    api_configured = GEMINI_API_KEY is not None and len(GEMINI_API_KEY) > 10
     return jsonify({
         "status": "online",
         "service": "Recruitment AI Service",
-        "version": "2.0.0"
+        "version": "2.1.0",
+        "gemini_configured": api_configured
     })
+
+@app.route('/test-gemini', methods=['GET'])
+def test_gemini():
+    """Test endpoint to verify Gemini API is working."""
+    try:
+        if not GEMINI_API_KEY:
+            return jsonify({"error": "GEMINI_API_KEY not configured"}), 500
+        
+        # Try to generate simple content
+        response = generate_content_safe("Say 'Hello, Gemini is working!' in exactly 5 words.")
+        return jsonify({
+            "status": "success",
+            "response": response.text[:100]
+        })
+    except Exception as e:
+        logger.error(f"Gemini test failed: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/extract-text', methods=['POST'])
 def extract_text_endpoint():
@@ -130,16 +159,16 @@ def analyze_cv():
         # 2. Prepare Prompt
         prompt = f"""
         Act as an expert Technical Recruiter. Analyze the following CV against the Job Description.
-        
+
         JOB DESCRIPTION:
         {job_description}
-        
+
         REQUIRED SKILLS: {', '.join(required_skills) if required_skills else 'Not specified'}
         REQUIRED EXPERIENCE: {required_years} years
-        
+
         CV TEXT:
         {cv_text[:15000]}
-        
+
         Output a JSON object strictly following this schema:
         {{
             "overallScore": <number 0-100>,
@@ -160,13 +189,13 @@ def analyze_cv():
             }}
         }}
         """
-        
+
         # 3. Call AI with Retry Logic
         response = generate_content_safe(prompt)
-        
+
         # Force garbage collection
         gc.collect()
-        
+
         # 4. Parse Response
         try:
             cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
@@ -192,17 +221,17 @@ def analyze_profile():
 
         prompt = f"""
         Extract structured data from this CV.
-        
+
         CV TEXT:
         {cv_text[:15000]}
-        
+
         Return JSON:
         {{
             "personalInfo": {{ "name": "Candidate Name", "email": "", "phone": "", "location": "", "linkedIn": "" }},
             "professionalSummary": "Brief summary",
             "skills": ["skill1", "skill2"],
-            "experience": {{ 
-                "totalYears": <number>, 
+            "experience": {{
+                "totalYears": <number>,
                 "positions": [ {{ "title": "", "company": "", "duration": "", "description": "" }} ]
             }},
             "education": [ {{ "degree": "", "field": "", "institution": "", "year": "" }} ],
@@ -214,11 +243,11 @@ def analyze_profile():
             }}
         }}
         """
-        
+
         response = generate_content_safe(prompt)
         cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
         result = json.loads(cleaned_response)
-        
+
         return jsonify({"status": "success", "data": result})
 
     except Exception as e:
