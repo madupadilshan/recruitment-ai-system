@@ -16,7 +16,7 @@ export const getAnalysisFromFile = async (filePath, job) => {
       required_skills: job.requiredSkills,
       required_years: job.requiredYears,
     }, { timeout: 120000 }); // 2 minutes timeout
-    
+
     console.log("✅ AI Analysis successful");
     return res.data;
   } catch (err) {

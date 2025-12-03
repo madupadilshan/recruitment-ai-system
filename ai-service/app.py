@@ -29,14 +29,27 @@ else:
     genai.configure(api_key=GEMINI_API_KEY)
     logger.info("✅ Gemini API configured successfully.")
 
-def get_gemini_model():
-    """Returns the best available Gemini model."""
-    try:
-        # Try Flash first for speed and cost
-        return genai.GenerativeModel('gemini-1.5-flash')
-    except Exception:
-        # Fallback to Pro
-        return genai.GenerativeModel('gemini-pro')
+def generate_content_safe(prompt):
+    """Generates content using Gemini with fallback models."""
+    # List of models to try in order of preference
+    models = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.0-pro']
+    
+    last_error = None
+    
+    for model_name in models:
+        try:
+            logger.info(f"🤖 Trying AI model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response
+        except Exception as e:
+            logger.warning(f"⚠️ Model {model_name} failed: {e}")
+            last_error = e
+            continue
+            
+    # If all models fail, raise the last error
+    logger.error("❌ All AI models failed.")
+    raise last_error
 
 import gc
 
@@ -52,7 +65,7 @@ def extract_text_from_pdf(file_path):
             else:
                 logger.error(f"Directory {dir_path} does not exist")
             return None
-        
+
         doc = fitz.open(file_path)
         text = ""
         for page in doc:
@@ -77,14 +90,14 @@ def extract_text_endpoint():
     try:
         data = request.get_json()
         file_path = data.get('file_path')
-        
+
         if not file_path:
             return jsonify({"error": "No file path provided"}), 400
-            
+
         text = extract_text_from_pdf(file_path)
         if text is None:
             return jsonify({"error": "Failed to extract text or file not found"}), 404
-            
+
         return jsonify({"text": text})
     except Exception as e:
         logger.error(f"Extract text error: {e}")
@@ -102,21 +115,19 @@ def analyze_cv():
         job_description = data.get('job_description', '')
         required_skills = data.get('required_skills', [])
         required_years = data.get('required_years', 0)
-        
+
         logger.info(f"Analyzing CV: {file_path}")
-        
+
         # 1. Get CV Text
         cv_text = data.get('cv_text')
         if not cv_text and file_path:
             cv_text = extract_text_from_pdf(file_path)
-            
+
         if not cv_text:
             logger.error("Could not retrieve CV text")
             return jsonify({"error": "Could not retrieve CV text"}), 400
 
         # 2. Prepare Prompt
-        model = get_gemini_model()
-        
         prompt = f"""
         Act as an expert Technical Recruiter. Analyze the following CV against the Job Description.
         
@@ -150,8 +161,8 @@ def analyze_cv():
         }}
         """
         
-        # 3. Call AI
-        response = model.generate_content(prompt)
+        # 3. Call AI with Retry Logic
+        response = generate_content_safe(prompt)
         
         # Force garbage collection
         gc.collect()
@@ -164,7 +175,7 @@ def analyze_cv():
         except json.JSONDecodeError:
             logger.error("Failed to parse AI response JSON")
             return jsonify({"error": "AI response parsing failed", "raw": response.text}), 500
-            
+
     except Exception as e:
         logger.error(f"Analyze CV Error: {e}")
         return jsonify({"error": str(e)}), 500
@@ -175,12 +186,10 @@ def analyze_profile():
     try:
         data = request.get_json()
         cv_text = data.get('cv_text', '')
-        
+
         if not cv_text:
             return jsonify({"error": "No CV text provided"}), 400
-            
-        model = get_gemini_model()
-        
+
         prompt = f"""
         Extract structured data from this CV.
         
@@ -206,12 +215,12 @@ def analyze_profile():
         }}
         """
         
-        response = model.generate_content(prompt)
+        response = generate_content_safe(prompt)
         cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
         result = json.loads(cleaned_response)
         
         return jsonify({"status": "success", "data": result})
-        
+
     except Exception as e:
         logger.error(f"Profile Analysis Error: {e}")
         return jsonify({"error": str(e)}), 500
@@ -222,12 +231,11 @@ def ai_summary():
     try:
         data = request.get_json()
         cv_text = data.get('cv_text', '')
-        
-        model = get_gemini_model()
+
         prompt = f"""
         Summarize this CV for a recruiter.
         CV TEXT: {cv_text[:10000]}
-        
+
         Return JSON:
         {{
             "summary": "3-4 sentences",
@@ -237,11 +245,11 @@ def ai_summary():
             "rating": "8/10"
         }}
         """
-        
-        response = model.generate_content(prompt)
+
+        response = generate_content_safe(prompt)
         cleaned_response = response.text.replace('```json', '').replace('```', '').strip()
         result = json.loads(cleaned_response)
-        
+
         return jsonify({"status": "success", "data": result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -253,15 +261,14 @@ def ai_chat():
         data = request.get_json()
         cv_text = data.get('cv_text', '')
         question = data.get('question', '')
-        
-        model = get_gemini_model()
+
         prompt = f"""
         Context: CV Content: {cv_text[:15000]}
         Question: {question}
         Answer as a helpful recruiter assistant based ONLY on the CV.
         """
-        
-        response = model.generate_content(prompt)
+
+        response = generate_content_safe(prompt)
         return jsonify({"status": "success", "answer": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
