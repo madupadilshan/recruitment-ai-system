@@ -27,17 +27,7 @@ if not GEMINI_API_KEY:
     logger.warning("⚠️ GEMINI_API_KEY not found in environment variables. AI features will fail.")
 else:
     genai.configure(api_key=GEMINI_API_KEY)
-    logger.info("✅ Gemini API configured successfully.")
-
-def generate_content_safe(prompt):
-    """Generates content using Gemini with fallback models."""
-    models = [
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-2.5-pro',
-    ]
-
-    last_error = None
+    logger.info("✅ Gemini API conf
 
     for model_name in models:
         try:
