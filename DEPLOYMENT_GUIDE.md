@@ -18,12 +18,14 @@ Complete step-by-step deployment guide for AWS EC2 with Docker and HTTPS/SSL.
 ### 1.1 Create EC2 Instance
 
 1. **Launch EC2 Instance:**
+
    - AMI: Ubuntu Server 24.04 LTS
    - Instance Type: t3.micro (1 vCPU, 1GB RAM)
    - Storage: 30GB gp3
    - Security Group: Allow ports 22 (SSH), 80 (HTTP), 443 (HTTPS)
 
 2. **Configure Security Group:**
+
    ```
    - Port 22 (SSH): 0.0.0.0/0
    - Port 80 (HTTP): 0.0.0.0/0
@@ -219,7 +221,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120",
 server {
     listen 80;
     server_name recruitmentapp.live www.recruitmentapp.live;
-    
+
     # Redirect HTTP to HTTPS
     return 301 https://$host$request_uri;
 }
@@ -227,31 +229,31 @@ server {
 server {
     listen 443 ssl http2;
     server_name recruitmentapp.live www.recruitmentapp.live;
-    
+
     # SSL Configuration
     ssl_certificate /etc/letsencrypt/live/www.recruitmentapp.live/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/www.recruitmentapp.live/privkey.pem;
-    
+
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
-    
+
     root /usr/share/nginx/html;
     index index.html;
-    
+
     client_max_body_size 10M;
-    
+
     # Frontend static files
     location / {
         try_files $uri $uri/ /index.html;
     }
-    
+
     # Cache static assets
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
-    
+
     # API proxy to backend
     location /api/ {
         proxy_pass http://recruitment-backend:5000;
@@ -264,7 +266,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
-    
+
     # WebSocket proxy for Socket.io
     location /socket.io/ {
         proxy_pass http://recruitment-backend:5000;
@@ -291,7 +293,7 @@ services:
     build: ./backend
     container_name: recruitment-backend
     ports:
-      - "5000:5000"
+      - '5000:5000'
     environment:
       - NODE_ENV=production
       - MONGO_URI=${MONGO_URI}
@@ -309,7 +311,7 @@ services:
     build: ./ai-service
     container_name: recruitment-ai
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     networks:
@@ -320,8 +322,8 @@ services:
     build: ./frontend
     container_name: recruitment-frontend
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
@@ -359,11 +361,13 @@ sudo certbot certonly --standalone -d www.recruitmentapp.live -d recruitmentapp.
 ```
 
 **Follow prompts:**
+
 - Email: your-email@gmail.com
 - Accept Terms: Y
 - Share email: N
 
 **Certificate files saved at:**
+
 - Certificate: `/etc/letsencrypt/live/www.recruitmentapp.live/fullchain.pem`
 - Private Key: `/etc/letsencrypt/live/www.recruitmentapp.live/privkey.pem`
 - Expires: 90 days (auto-renewal configured)
@@ -406,6 +410,7 @@ docker compose build --no-cache
 ```
 
 **This will:**
+
 - Build backend (Node.js Express)
 - Build frontend (React with Nginx)
 - Build AI service (Python Flask)
@@ -462,10 +467,12 @@ curl http://localhost:8000/health
 ### 10.3 Browser Testing
 
 1. **HTTP Redirect:**
+
    - Visit: http://www.recruitmentapp.live
    - Should redirect to: https://www.recruitmentapp.live
 
 2. **HTTPS Access:**
+
    - Visit: https://www.recruitmentapp.live
    - Should show green padlock (valid SSL)
 
@@ -744,10 +751,12 @@ Your application is now deployed with:
 - ✅ SSL auto-renewal configured
 
 **Access your application:**
+
 - Production: https://www.recruitmentapp.live
 - Alternative: https://recruitmentapp.live
 
 **Important URLs:**
+
 - Frontend: https://www.recruitmentapp.live
 - Backend API: https://www.recruitmentapp.live/api
 - EC2 Instance: 54.89.157.88
@@ -781,7 +790,7 @@ git pull && docker compose down && docker compose build --no-cache && docker com
 
 ---
 
-**Deployment Date:** January 21, 2026  
-**Server:** AWS EC2 (Ubuntu 24.04, t3.micro)  
-**Domain:** www.recruitmentapp.live  
+**Deployment Date:** January 21, 2026
+**Server:** AWS EC2 (Ubuntu 24.04, t3.micro)
+**Domain:** www.recruitmentapp.live
 **SSL Provider:** Let's Encrypt
